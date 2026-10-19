@@ -19,7 +19,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:6px;text-align:left;bord
 .red{color:#c0392b}.grn{color:#1a8a4a}.bar{background:#0b4ea2;height:10px;border-radius:5px}
 </style></head><body><div id="app"></div>
 <script>
-const SB_URL='https://qvrusvuvmqkngtiztfsb.supabase.co', SB_KEY='sb_publishable_nrrHjpsqP46TQgaIxmfOoQ_R6uc2O6M';
+const SB_URL='PASTE_SUPABASE_URL', SB_KEY='PASTE_SUPABASE_ANON_KEY';
 const sb=supabase.createClient(SB_URL,SB_KEY);
 const L={bn:{dashboard:'ড্যাশবোর্ড',shift:'শিফট ক্লোজিং',parties:'বাকি গ্রাহক',settings:'সেটিংস',today_sale:'আজকের বিক্রি',credit_due:'বকেয়া টাকা',cash:'নগদ',shortage:'ঘাটতি',save:'জমা করুন',logout:'লগআউট',backup:'ব্যাকআপ',opening:'ওপেনিং',closing:'ক্লোজিং',amount:'টাকা'}};
 const DEF={name:'BPCL AMAR SAHA PETROL PUMP',address:'Ranikamat, Chanchal, Malda, WB 732140',phones:'8945038075, 9475972794',gstin:'',
@@ -75,7 +75,7 @@ async function dash(){
   <div class=card>${t('credit_due')}<div class="big red">${inr(due)}</div></div></div>
   <div class=card><b>Last 7 days</b>${Object.keys(days).sort().map(k=>`<div>${k} ${inr(days[k])}<div class=bar style="width:${days[k]/mx*100}%"></div></div>`).join('')||'<p>No data yet</p>'}</div>
   <div class="card tw"><b>Recent shifts</b><table><tr><th>Date</th><th>Shift</th><th>Sale</th><th>Credit</th><th>UPI</th><th>${t('cash')}</th><th>${t('shortage')}</th></tr>
-  ${(sc||[]).map(x=>`<tr><td>${x.date}</td><td>${esc(x.shift)}</td><td>${inr(x.total_sale)}</td><td>${inr(x.credit)}</td><td>${inr(x.upi)}</td><td>${inr(x.cash_counted)}</td><td class="${x.shortage>0?'red':'grn'}">${inr(x.shortage)}</td></tr>`).join('')}</table></div>`;
+  ${(sc||[]).map(x=>`<tr><td>${x.date}</td><td>${esc(x.shift)}</td><td>${inr(x.total_sale)}</td><td>${inr(x.credit)}</td><td>${inr(x.upi)}</td><td>${inr(x.cash_counted)}</td><td class="${x.shortage>0?'red':'grn'}">${inr(x.shortage)}</td>${S.me?.role=='owner'?`<td><button title="Delete shift" onclick="dShift(${x.id})">🗑</button></td>`:''}</tr>`).join('')}</table></div>`;
 }
 
 async function shiftPage(){
@@ -142,7 +142,7 @@ async function addParty(){
 async function ledger(id){
   const {data}=await sb.from('party_txn').select('*').eq('party_id',id).order('date').order('id');let b=0;
   $('#led').innerHTML=`<div class="card tw"><h3>Ledger</h3><div class=row><label>Date<input type=date id=pd value="${today()}"></label><label>Payment received<input type=number id=pa></label><label>Note<input id=pt></label></div><button class=p onclick="recv(${id})">Receive</button>
-  <table><tr><th>Date</th><th>Note</th><th>Credit</th><th>Paid</th><th>Balance</th></tr>${(data||[]).map(x=>{b+=(x.type=='credit'?1:-1)*num(x.amount);return `<tr><td>${x.date}</td><td>${esc(x.note)}</td><td>${x.type=='credit'?inr(x.amount):''}</td><td>${x.type=='payment'?inr(x.amount):''}</td><td>${inr(b)}</td></tr>`}).join('')}</table></div>`;
+  <table><tr><th>Date</th><th>Note</th><th>Credit</th><th>Paid</th><th>Balance</th></tr>${(data||[]).map(x=>{b+=(x.type=='credit'?1:-1)*num(x.amount);return `<tr><td>${x.date}</td><td>${esc(x.note)}</td><td>${x.type=='credit'?inr(x.amount):''}</td><td>${x.type=='payment'?inr(x.amount):''}</td><td>${inr(b)}</td>${del('party_txn',x.id)}</tr>`}).join('')}</table></div>`;
 }
 async function recv(id){
   const a=num($('#pa').value);if(a<=0)return alert('Enter amount');

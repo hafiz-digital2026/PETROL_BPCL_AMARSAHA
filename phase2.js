@@ -7,9 +7,17 @@ const sm=(a,k)=>a.reduce((s,x)=>s+num(x[k]),0),M=h=>$('#main').innerHTML=h;
 const q=async(tb,f)=>{if(f&&/limit\(/.test(f)){return(await f(sb.from(tb).select('*'))).data||[]}const o=[];for(let i=0;;i+=1000){let r=sb.from(tb).select('*');if(f)r=f(r);const{data}=await r.range(i,i+999);if(!data?.length)break;o.push(...data);if(data.length<1000)break}return o};
 const dl=(n,txt,ty)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:ty}));a.download=n+'-'+today()+'.'+(ty=='text/csv'?'csv':'xml');a.click()};
 const csv=(n,rows)=>dl(n,'\ufeff'+rows.map(r=>r.map(c=>'"'+String(c??'').replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv');
-const ins=async(tb,o,after)=>{const{error}=await sb.from(tb).insert(o);error?alert(error.message):after()};
+const ins=async(tb,o,after)=>{if(window._i)return;if(o.litres===0||o.ltr===0||o.rate===0)return alert('Litres aur rate 0 nahi ho sakte');window._i=1;try{const{error}=await sb.from(tb).insert(o);error?alert(error.message):after()}finally{setTimeout(()=>window._i=0,1500)}};
 const pd=s=>{s=String(s||'').trim();let m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);if(m)return`${m[3].length==2?'20'+m[3]:m[3]}-${m[2].padStart(2,0)}-${m[1].padStart(2,0)}`;m=s.match(/^\d{4}-\d{2}-\d{2}/);return m?m[0]:null};
 const pc=l=>{const o=[];let c='',z=0;for(const h of l){if(h=='"')z=!z;else if(h==','&&!z){o.push(c);c=''}else c+=h}o.push(c);return o};
+const del=(tb,id)=>S.me?.role=='owner'&&id>0?`<td><button title="Delete" onclick="dRow('${tb}',${id})">🗑</button></td>`:'';
+async function dRow(tb,id){if(!confirm('Ye entry delete karni hai? Wapas nahi aayegi.'))return;const{error}=await sb.from(tb).delete().eq('id',id);error?alert(error.message):go(S.page)}
+async function dShift(id){const{data:x}=await sb.from('shift_close').select('*').eq('id',id).maybeSingle();if(!x)return;
+ if(!confirm('Shift '+x.date+' '+x.shift+' poori delete hogi (saari nozzle readings + us shift ki credit entries). Pakka?'))return;
+ let e=(await sb.from('readings').delete().eq('date',x.date).eq('shift',x.shift)).error;
+ if(!e)e=(await sb.from('party_txn').delete().eq('date',x.date).eq('note','Shift '+x.shift).eq('type','credit')).error;
+ if(!e)e=(await sb.from('shift_close').delete().eq('id',id)).error;
+ e?alert(e.message):go(S.page)}
 const og=go,PG={stock,books,reports,recon};
 go=p=>{if(PG[p]){S.page=p;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.id=='n_'+p));PG[p]()}else og(p);
  let b=$('#bk');if(!b){document.querySelector('nav').insertAdjacentHTML('afterend','<div id=bk></div>');b=$('#bk')}
@@ -23,12 +31,13 @@ async function stock(){
  const[rd,pu]=await Promise.all([q('readings',r=>r.gte('date',d0)),q('purchases',r=>r.order('date',{ascending:false}).order('id',{ascending:false}).limit(30))]);
  const cards=['MS','HSD'].map(p=>{const tk=TK.filter(x=>x[1]==p&&lt[x[0]]),D=tk.map(x=>lt[x[0]].date).sort().pop();
   if(!D)return`<div class=card>${p}<div class=big>—</div><small>Dip entry karo</small></div>`;
-  const st=sm(tk.map(x=>lt[x[0]]),'litres')+sm(pu.filter(x=>x.product==p&&x.date>D),'ltr')-sm(rd.filter(x=>x.product==p&&x.date>D),'ltr');
+  const E=tk.map(x=>lt[x[0]].created_at||'9').sort().pop(),st=sm(tk.map(x=>lt[x[0]]),'litres')+sm(pu.filter(x=>x.product==p&&(x.created_at||'9')>E),'ltr')-sm(rd.filter(x=>x.product==p&&(x.created_at||'9')>E),'ltr');
   return`<div class=card>${p} book stock<div class="big ${st<LOW?'red':''}">${st.toFixed(0)} L</div>${st<LOW?'<b class=red>Stock low! Tanker order karo</b><br>':''}<small>dip of ${D} + purchase - sale</small></div>`}).join('');
  M(`<div class=g>${cards}</div>
  <div class=card><h3>Tank dip</h3><div class=row><label>Date<input type=date id=dd value="${today()}"></label><label>Tank<select id=dt>${TK.map(x=>`<option value=${x[0]}>${x[0]} (${x[1]})</option>`).join('')}</select></label><label>Litres (dip chart se)<input type=number id=dl></label><label>Density<input type=number step=.0001 id=dn></label></div><button class=p onclick="ins('dips',{date:$('#dd').value,tank:$('#dt').value,product:TK.find(x=>x[0]==$('#dt').value)[1],litres:num($('#dl').value),density:num($('#dn').value)||null},stock)">Save dip</button></div>
  <div class=card><h3>BPCL tanker purchase</h3><div class=row><label>Date<input type=date id=pdt value="${today()}"></label><label>Product<select id=pp2><option>MS</option><option>HSD</option></select></label><label>Litres<input type=number id=pl2></label><label>Rate/L<input type=number step=.01 id=pr2></label><label>Invoice no.<input id=pi2></label></div><button class=p onclick="ins('purchases',{date:$('#pdt').value,product:$('#pp2').value,ltr:num($('#pl2').value),rate:num($('#pr2').value),amount:num($('#pl2').value)*num($('#pr2').value),invoice:$('#pi2').value},stock)">Save purchase</button></div>
- <div class="card tw"><b>Recent purchases</b><table><tr><th>Date</th><th>Product</th><th>Litres</th><th>Amount</th><th>Invoice</th></tr>${pu.map(x=>`<tr><td>${x.date}</td><td>${x.product}</td><td>${x.ltr}</td><td>${inr(x.amount)}</td><td>${esc(x.invoice)}</td></tr>`).join('')}</table></div>`);
+ <div class="card tw"><b>Recent purchases</b><table><tr><th>Date</th><th>Product</th><th>Litres</th><th>Amount</th><th>Invoice</th></tr>${pu.map(x=>`<tr><td>${x.date}</td><td>${x.product}</td><td>${x.ltr}</td><td>${inr(x.amount)}</td><td>${esc(x.invoice)}</td>${del('purchases',x.id)}</tr>`).join('')}</table></div>
+ <div class="card tw"><b>Recent dips</b><table><tr><th>Date</th><th>Tank</th><th>Litres</th><th>Density</th></tr>${dp.slice(0,10).map(x=>`<tr><td>${x.date}</td><td>${x.tank}</td><td>${x.litres}</td><td>${x.density??''}</td>${del('dips',x.id)}</tr>`).join('')}</table></div>`);
 }
 
 async function books(){
@@ -36,7 +45,7 @@ async function books(){
  M(`<div class=g><div class=card>Cash book<div class=big>${inr(bal('cash'))}</div></div><div class=card>Bank book<div class=big>${inr(bal('bank'))}</div></div></div>
  <div class=card><h3>New entry (cash/bank/expense/salary)</h3><div class=row><label>Date<input type=date id=ld value="${today()}"></label><label>Book<select id=lb><option value=cash>Cash</option><option value=bank>Bank</option></select></label><label>In/Out<select id=lt><option value=in>In (jama)</option><option value=out>Out (kharcha)</option></select></label><label>Category<select id=lc>${CAT.map(c=>`<option>${c}</option>`).join('')}</select></label><label>Amount<input type=number id=la></label><label>Note<input id=ln></label></div>
  <button class=p onclick="num($('#la').value)>0?ins('ledger_entries',{date:$('#ld').value,book:$('#lb').value,type:$('#lt').value,category:$('#lc').value,amount:num($('#la').value),note:$('#ln').value},books):alert('Amount?')">Save</button></div>
- <div class="card tw"><table><tr><th>Date</th><th>Book</th><th>In/Out</th><th>Category</th><th>Amount</th><th>Note</th><th>Recon</th></tr>${all.slice(0,80).map(x=>`<tr><td>${x.date}</td><td>${x.book}</td><td>${x.type}</td><td>${esc(x.category)}</td><td>${inr(x.amount)}</td><td>${esc(x.note)}</td><td>${x.recon?'✓':''}</td></tr>`).join('')}</table></div>`);
+ <div class="card tw"><table><tr><th>Date</th><th>Book</th><th>In/Out</th><th>Category</th><th>Amount</th><th>Note</th><th>Recon</th></tr>${all.slice(0,80).map(x=>`<tr><td>${x.date}</td><td>${x.book}</td><td>${x.type}</td><td>${esc(x.category)}</td><td>${inr(x.amount)}</td><td>${esc(x.note)}</td><td>${x.recon?'✓':''}</td>${del('ledger_entries',x.id)}</tr>`).join('')}</table></div>`);
 }
 
 async function reports(){
