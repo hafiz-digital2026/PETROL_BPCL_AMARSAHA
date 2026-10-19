@@ -22,7 +22,16 @@ const og=go,PG={stock,books,reports,recon};
 go=p=>{if(PG[p]){S.page=p;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.id=='n_'+p));PG[p]()}else og(p);
  let b=$('#bk');if(!b){document.querySelector('nav').insertAdjacentHTML('afterend','<div id=bk></div>');b=$('#bk')}
  b.innerHTML=(!localStorage.lb||Date.now()-new Date(localStorage.lb)>3*864e5)?'<div class=card style="background:#fff3cd;margin:8px">⚠ Backup lena baaki hai (3+ din). Upar Backup button dabao.</div>':''};
-const ob=backup;backup=async()=>{await ob();localStorage.lb=today()};
+async function backupXlsx(){
+ if(typeof XLSX=='undefined')return alert('Excel library load nahi hui (internet chahiye). JSON backup ho chuka hai.');
+ const ps=(await pg('parties','*')).data||[],nm={};ps.forEach(p=>nm[p.id]=p.name);
+ const T=[['Nozzle Readings','readings'],['Shifts','shift_close'],['Purchases','purchases'],['Tank Dips','dips'],['Cash-Bank Book','ledger_entries'],['Party Ledger','party_txn'],['Parties','parties']],wb=XLSX.utils.book_new();
+ for(const[n,t]of T){let r=(await pg(t,'*')).data||[];
+  if(t=='party_txn')r=r.map(x=>({party:nm[x.party_id]||x.party_id,...x}));
+  r.sort((a,b)=>String(a.date||'')<String(b.date||'')?-1:1);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(r),n)}
+ XLSX.writeFile(wb,'pump-data-'+today()+'.xlsx')}
+const ob=backup;backup=async()=>{await ob();await backupXlsx();localStorage.lb=today()};
 
 async function stock(){
  const dp=await q('dips',r=>r.order('date',{ascending:false}).order('id',{ascending:false}).limit(100)),lt={};

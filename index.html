@@ -4,6 +4,7 @@
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b4ea2"><style>nav button{text-transform:capitalize;white-space:nowrap}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="offline.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:#f3f5f9;color:#1a2233}
 header{background:#0b4ea2;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
@@ -19,7 +20,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:6px;text-align:left;bord
 .red{color:#c0392b}.grn{color:#1a8a4a}.bar{background:#0b4ea2;height:10px;border-radius:5px}
 </style></head><body><div id="app"></div>
 <script>
-const SB_URL='PASTE_SUPABASE_URL', SB_KEY='PASTE_SUPABASE_ANON_KEY';
+const SB_URL='https://qvrusvuvmqkngtiztfsb.supabase.co', SB_KEY='sb_publishable_nrrHjpsqP46TQgaIxmfOoQ_R6uc2O6M';
 const sb=supabase.createClient(SB_URL,SB_KEY);
 const L={bn:{dashboard:'ড্যাশবোর্ড',shift:'শিফট ক্লোজিং',parties:'বাকি গ্রাহক',settings:'সেটিংস',today_sale:'আজকের বিক্রি',credit_due:'বকেয়া টাকা',cash:'নগদ',shortage:'ঘাটতি',save:'জমা করুন',logout:'লগআউট',backup:'ব্যাকআপ',opening:'ওপেনিং',closing:'ক্লোজিং',amount:'টাকা'}};
 const DEF={name:'BPCL AMAR SAHA PETROL PUMP',address:'Ranikamat, Chanchal, Malda, WB 732140',phones:'8945038075, 9475972794',gstin:'',

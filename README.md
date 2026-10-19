@@ -55,13 +55,16 @@ Asli rok database (RLS) me hai. Kisi ko band karna ho to Users tab me Active ka 
 - Offline me nahi hoga: naya party/user, Settings, payment receive, bank reconcile.
 - Sync se pehle browser ka data saaf mat karo. Ek shift ek hi device se bharo (warna double ho sakti hai).
 
+## Reset (sirf Owner)
+Settings ke neeche **Danger zone**: pehle Backup download hota hai, phir `RESET` likhna padta hai. Saari entries (aur chaho to parties) khali ho jati hain. Settings, rate, nozzle aur users bache rehte hain. Reset se pehle Backup (Excel+JSON) apne aap hota hai, par Excel/JSON ko app me wapas load karne ka option nahi hai (sirf dekhne/CA ke liye). Shuru me test data saaf karne ke liye use karo.
+
 ## Reports / CA Pack / Tally
 - **Reports:** P&L, balance summary, Day book (CSV, Excel me khulta hai), party outstanding + WhatsApp reminder.
 - **Tally XML:** Tally me pehle ledgers banao: `Cash`, `Bank`, `Fuel Sales`, `Fuel Purchase`, `BPCL`, aur Books me jo category use karo (Salary, Rent, etc.). Phir Import > Vouchers. Sales voucher poora Cash me jata hai (credit sale alag nahi). Pehle CA se test import karwa lo.
 - **Bank Recon:** bank statement CSV upload > date/debit/credit column chuno > Match > Reconciled mark karo.
 
 ## Backup (zaroori)
-- Supabase free me auto backup nahi. **Backup** button (JSON, saare 8 tables) hafte me ek baar Google Drive me rakho. 3 din se zyada ho to peela warning aata hai.
+- Supabase free me auto backup nahi. **Backup** button ek saath **Excel (.xlsx, alag sheet har cheez ki) aur JSON** download karta hai (saare tables) hafte me ek baar Google Drive me rakho. 3 din se zyada ho to peela warning aata hai.
 - Supabase free project 7 din bina use ke pause hota hai. Roz shift entry hogi to koi dikkat nahi.
 
 ## Abhi nahi hai
