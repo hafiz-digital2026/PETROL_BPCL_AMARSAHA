@@ -1,0 +1,175 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Amar Saha BPCL Pump</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b4ea2"><style>nav button{text-transform:capitalize;white-space:nowrap}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="offline.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:#f3f5f9;color:#1a2233}
+header{background:#0b4ea2;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+nav{display:flex;gap:4px;overflow-x:auto;background:#fff;padding:6px;border-bottom:1px solid #dde}
+button{border:0;border-radius:8px;padding:8px 14px;background:#e8eefb;color:#0b4ea2;font-weight:600;cursor:pointer}
+button.on,button.p{background:#0b4ea2;color:#fff}
+main{max-width:980px;margin:auto;padding:12px}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px #0001}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}.row>label{flex:1;min-width:130px;font-size:12px;color:#556}
+input,select,textarea{width:100%;padding:8px;border:1px solid #c8d0e0;border-radius:8px;font:inherit;margin-top:3px}
+table{width:100%;border-collapse:collapse}th,td{padding:6px;text-align:left;border-bottom:1px solid #eef}
+.tw{overflow-x:auto}.big{font-size:22px;font-weight:700}.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.red{color:#c0392b}.grn{color:#1a8a4a}.bar{background:#0b4ea2;height:10px;border-radius:5px}
+</style></head><body><div id="app"></div>
+<script>
+const SB_URL='https://qvrusvuvmqkngtiztfsb.supabase.co', SB_KEY='sb_publishable_nrrHjpsqP46TQgaIxmfOoQ_R6uc2O6M';
+const sb=supabase.createClient(SB_URL,SB_KEY);
+const L={bn:{dashboard:'ড্যাশবোর্ড',shift:'শিফট ক্লোজিং',parties:'বাকি গ্রাহক',settings:'সেটিংস',today_sale:'আজকের বিক্রি',credit_due:'বকেয়া টাকা',cash:'নগদ',shortage:'ঘাটতি',save:'জমা করুন',logout:'লগআউট',backup:'ব্যাকআপ',opening:'ওপেনিং',closing:'ক্লোজিং',amount:'টাকা'}};
+const DEF={name:'BPCL AMAR SAHA PETROL PUMP',address:'Ranikamat, Chanchal, Malda, WB 732140',phones:'8945038075, 9475972794',gstin:'',
+ rates:{MS:0,HSD:0},shifts:['Morning (6AM-2PM)','Afternoon (2PM-10PM)','Night (10PM-6AM)'],
+ nozzles:[{id:'MS1',p:'MS'},{id:'HSD1',p:'HSD'},{id:'MS1_2',p:'MS',n:'MS1 (M/C 2)'},{id:'HSD1_2',p:'HSD',n:'HSD1 (M/C 2)'},{id:'MS2_2',p:'MS',n:'MS2 (M/C 2)'},{id:'HSD2_2',p:'HSD',n:'HSD2 (M/C 2)'}]};
+let S={lang:localStorage.lang||'en',page:'dash',cfg:DEF,parties:[]};
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const t=k=>(S.lang=='bn'&&L.bn[k])||{dashboard:'Dashboard',shift:'Shift Closing',parties:'Credit Parties',settings:'Settings',today_sale:'Today Sale',credit_due:'Credit Due',cash:'Cash',shortage:'Shortage',save:'Save',logout:'Logout',backup:'Backup',opening:'Opening',closing:'Closing',amount:'Amount'}[k]||k;
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const inr=n=>'₹'+(+n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+const num=v=>parseFloat(v)||0;
+async function pg(tb,cols){const o=[];for(let i=0;;i+=1000){const{data,error}=await sb.from(tb).select(cols).order('id').range(i,i+999);if(error)return{data:o.length?o:null,error};o.push(...data);if(data.length<1000)break}return{data:o}}
+
+async function init(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session) return login();
+  const {data}=await sb.from('pump_settings').select('data').eq('id',1).maybeSingle();
+  S.cfg={...DEF,...(data?.data||{})}; shell(); go('dash');
+}
+function login(msg=''){
+  $('#app').innerHTML=`<main><div class=card style="max-width:380px;margin:60px auto"><h2>${esc(S.cfg.name)}</h2><p class=red>${esc(msg)}</p>
+  <label>Email<input id=em type=email></label><br><br><label>Password<input id=pw type=password></label><br><br>
+  <button class=p onclick="doLogin()">Login</button></div></main>`;
+}
+async function doLogin(){
+  const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
+  error?login(error.message):init();
+}
+function shell(){
+  $('#app').innerHTML=`<header><b>${esc(S.cfg.name)}</b><span><button onclick="S.lang=S.lang=='en'?'bn':'en';localStorage.lang=S.lang;shell();go(S.page)">${S.lang=='en'?'বাংলা':'English'}</button>
+  <button onclick="backup()">${t('backup')}</button> <button onclick="sb.auth.signOut().then(init)">${t('logout')}</button></span></header>
+  <nav>${['dash','shift','stock','books','parties','reports','recon','settings'].map(p=>`<button id=n_${p} onclick="go('${p}')">${({recon:'Bank Recon'})[p]||t(p=='dash'?'dashboard':p)}</button>`).join('')}</nav><main id=main></main>`;
+}
+function go(p){
+  S.page=p; document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.id=='n_'+p));
+  ({dash,shift:shiftPage,parties:partiesPage,settings:settingsPage})[p]();
+}
+
+async function dash(){
+  const d7=new Date(Date.now()-6*864e5).toISOString().slice(0,10);
+  const [{data:r},{data:tx},{data:sc}]=await Promise.all([
+    sb.from('readings').select('date,product,ltr,amount').gte('date',d7),
+    pg('party_txn','type,amount'),
+    sb.from('shift_close').select('*').order('id',{ascending:false}).limit(8)]);
+  const td=(r||[]).filter(x=>x.date==today()),sum=(a,k)=>a.reduce((s,x)=>s+num(x[k]),0);
+  const due=(tx||[]).reduce((s,x)=>s+(x.type=='credit'?1:-1)*num(x.amount),0);
+  const days={};(r||[]).forEach(x=>days[x.date]=(days[x.date]||0)+num(x.amount));
+  const mx=Math.max(1,...Object.values(days));
+  $('#main').innerHTML=`<div class=g>
+  <div class=card>${t('today_sale')}<div class=big>${inr(sum(td,'amount'))}</div></div>
+  <div class=card>MS<div class=big>${sum(td.filter(x=>x.product=='MS'),'ltr').toFixed(1)} L</div></div>
+  <div class=card>HSD<div class=big>${sum(td.filter(x=>x.product=='HSD'),'ltr').toFixed(1)} L</div></div>
+  <div class=card>${t('credit_due')}<div class="big red">${inr(due)}</div></div></div>
+  <div class=card><b>Last 7 days</b>${Object.keys(days).sort().map(k=>`<div>${k} ${inr(days[k])}<div class=bar style="width:${days[k]/mx*100}%"></div></div>`).join('')||'<p>No data yet</p>'}</div>
+  <div class="card tw"><b>Recent shifts</b><table><tr><th>Date</th><th>Shift</th><th>Sale</th><th>Credit</th><th>UPI</th><th>${t('cash')}</th><th>${t('shortage')}</th></tr>
+  ${(sc||[]).map(x=>`<tr><td>${x.date}</td><td>${esc(x.shift)}</td><td>${inr(x.total_sale)}</td><td>${inr(x.credit)}</td><td>${inr(x.upi)}</td><td>${inr(x.cash_counted)}</td><td class="${x.shortage>0?'red':'grn'}">${inr(x.shortage)}</td></tr>`).join('')}</table></div>`;
+}
+
+async function shiftPage(){
+  const {data}=await sb.from('readings').select('nozzle,closing').order('date',{ascending:false}).order('id',{ascending:false}).limit(100);
+  const last={};(data||[]).forEach(r=>{if(!(r.nozzle in last))last[r.nozzle]=r.closing});
+  const {data:ps}=await sb.from('parties').select('id,name').order('name');S.parties=ps||[];
+  const c=S.cfg;
+  $('#main').innerHTML=`<div class=card><h3>${t('shift')}</h3><div class=row>
+  <label>Date<input type=date id=sd value="${today()}"></label>
+  <label>Shift<select id=ss>${c.shifts.map(s=>`<option>${esc(s)}</option>`).join('')}</select></label>
+  <label>MS rate<input type=number step=.01 id=r_MS value="${c.rates.MS}" oninput=calc()></label>
+  <label>HSD rate<input type=number step=.01 id=r_HSD value="${c.rates.HSD}" oninput=calc()></label></div>
+  <div class=tw><table><tr><th>Nozzle</th><th>${t('opening')}</th><th>${t('closing')}</th><th>Litre</th><th>${t('amount')}</th></tr>
+  ${c.nozzles.map(n=>`<tr data-n="${n.id}" data-p="${n.p}"><td>${esc(n.n||n.id)}</td><td><input type=number step=.01 class=o value="${last[n.id]??0}" oninput=calc()></td>
+  <td><input type=number step=.01 class=cl oninput=calc()></td><td class=l>0</td><td class=a>0</td></tr>`).join('')}</table></div></div>
+  <div class=card><b>${t('credit_due')} (Credit sales)</b><div id=cr></div><button onclick=addCr()>+ Credit line</button></div>
+  <div class=card><div class=row><label>UPI / Card<input type=number id=upi oninput=calc()></label><label>${t('cash')} counted<input type=number id=cc oninput=calc()></label></div>
+  <div id=sum></div><br><button class=p onclick=saveShift()>${t('save')}</button></div>`;
+  calc();
+}
+function addCr(){
+  $('#cr').insertAdjacentHTML('beforeend',`<div class="row crl"><label>Party<select class=cp>${S.parties.map(p=>`<option value=${p.id}>${esc(p.name)}</option>`).join('')}</select></label><label>${t('amount')}<input type=number class=ca oninput=calc()></label></div>`);
+}
+function calc(){
+  let tot=0;
+  document.querySelectorAll('tr[data-n]').forEach(tr=>{
+    const o=num(tr.querySelector('.o').value),cl=tr.querySelector('.cl').value,rate=num($('#r_'+tr.dataset.p).value);
+    const l=cl===''?0:num(cl)-o,a=l*rate;tr.querySelector('.l').textContent=l.toFixed(2);tr.querySelector('.a').textContent=a.toFixed(2);tot+=a;
+  });
+  const cr=[...document.querySelectorAll('.ca')].reduce((s,e)=>s+num(e.value),0),exp=tot-cr-num($('#upi').value),sh=exp-num($('#cc').value);
+  window.T={tot,cr,exp,sh};
+  $('#sum').innerHTML=`Total sale <b>${inr(tot)}</b> | Credit <b>${inr(cr)}</b> | Expected cash <b>${inr(exp)}</b> | ${t('shortage')} <b class="${sh>0?'red':'grn'}">${inr(sh)}</b>`;
+}
+async function saveShift(){
+  const date=$('#sd').value,shift=$('#ss').value,rows=[];
+  for(const tr of document.querySelectorAll('tr[data-n]')){
+    const cl=tr.querySelector('.cl').value;if(cl==='')continue;
+    const o=num(tr.querySelector('.o').value),c=num(cl);
+    if(c<o) return alert('Closing < opening: '+tr.dataset.n);
+    const rate=num($('#r_'+tr.dataset.p).value),l=c-o;
+    rows.push({date,shift,nozzle:tr.dataset.n,product:tr.dataset.p,opening:o,closing:c,ltr:l,rate,amount:l*rate});
+  }
+  if(!rows.length) return alert('Enter closing readings');
+  const {data:dup}=await sb.from('shift_close').select('id').eq('date',date).eq('shift',shift);
+  if(dup?.length&&!confirm('This shift is already saved. Save again?'))return;
+  calc();let e=(await sb.from('readings').insert(rows)).error;
+  const tx=[...document.querySelectorAll('.crl')].map(d=>({party_id:+d.querySelector('.cp').value,date,type:'credit',amount:num(d.querySelector('.ca').value),note:'Shift '+shift})).filter(x=>x.amount>0&&x.party_id);
+  if(!e&&tx.length)e=(await sb.from('party_txn').insert(tx)).error;
+  if(!e)e=(await sb.from('shift_close').insert({date,shift,total_sale:T.tot,credit:T.cr,upi:num($('#upi').value),expected_cash:T.exp,cash_counted:num($('#cc').value),shortage:T.sh})).error;
+  e?alert(e.message):(alert('Saved'),go('dash'));
+}
+
+async function partiesPage(){
+  const [{data:ps},{data:tx}]=await Promise.all([sb.from('parties').select('*').order('name'),pg('party_txn','party_id,type,amount')]);
+  const bal={};(tx||[]).forEach(x=>bal[x.party_id]=(bal[x.party_id]||0)+(x.type=='credit'?1:-1)*num(x.amount));
+  $('#main').innerHTML=`<div class=card><h3>New party</h3><div class=row><label>Name<input id=pn></label><label>Phone<input id=pp></label><label>Vehicle no.<input id=pv></label><label>Limit<input type=number id=pl></label></div><button class=p onclick=addParty()>Add</button></div>
+  <div class="card tw"><table><tr><th>Party</th><th>Phone</th><th>Limit</th><th>Due</th></tr>${(ps||[]).map(p=>`<tr><td><a href=# onclick="ledger(${p.id});return false">${esc(p.name)}</a><br><small>${esc(p.vehicle)}</small></td><td>${esc(p.phone)}</td><td>${inr(p.credit_limit)}</td><td class="${bal[p.id]>p.credit_limit&&p.credit_limit>0?'red':''}">${inr(bal[p.id])}</td></tr>`).join('')}</table></div><div id=led></div>`;
+}
+async function addParty(){
+  if(!$('#pn').value.trim())return alert('Name required');
+  const {error}=await sb.from('parties').insert({name:$('#pn').value.trim(),phone:$('#pp').value,vehicle:$('#pv').value,credit_limit:num($('#pl').value)});
+  error?alert(error.message):partiesPage();
+}
+async function ledger(id){
+  const {data}=await sb.from('party_txn').select('*').eq('party_id',id).order('date').order('id');let b=0;
+  $('#led').innerHTML=`<div class="card tw"><h3>Ledger</h3><div class=row><label>Date<input type=date id=pd value="${today()}"></label><label>Payment received<input type=number id=pa></label><label>Note<input id=pt></label></div><button class=p onclick="recv(${id})">Receive</button>
+  <table><tr><th>Date</th><th>Note</th><th>Credit</th><th>Paid</th><th>Balance</th></tr>${(data||[]).map(x=>{b+=(x.type=='credit'?1:-1)*num(x.amount);return `<tr><td>${x.date}</td><td>${esc(x.note)}</td><td>${x.type=='credit'?inr(x.amount):''}</td><td>${x.type=='payment'?inr(x.amount):''}</td><td>${inr(b)}</td></tr>`}).join('')}</table></div>`;
+}
+async function recv(id){
+  const a=num($('#pa').value);if(a<=0)return alert('Enter amount');
+  const {error}=await sb.from('party_txn').insert({party_id:id,date:$('#pd').value,type:'payment',amount:a,note:$('#pt').value||'Payment received'});
+  error?alert(error.message):partiesPage().then(()=>ledger(id));
+}
+
+function settingsPage(){
+  const c=S.cfg;
+  $('#main').innerHTML=`<div class=card><h3>${t('settings')}</h3><div class=row><label>Pump name<input id=s_name value="${esc(c.name)}"></label><label>Phones<input id=s_ph value="${esc(c.phones)}"></label></div>
+  <div class=row><label>Address<input id=s_ad value="${esc(c.address)}"></label><label>GSTIN / VAT (later)<input id=s_gs value="${esc(c.gstin)}"></label></div>
+  <div class=row><label>MS rate<input type=number step=.01 id=s_ms value="${c.rates.MS}"></label><label>HSD rate<input type=number step=.01 id=s_hs value="${c.rates.HSD}"></label></div>
+  <label>Shifts (one per line)<textarea id=s_sh rows=3>${esc(c.shifts.join('\n'))}</textarea></label><br><br>
+  <label>Nozzles (JSON: id, p=MS/HSD, n=display name)<textarea id=s_nz rows=8>${esc(JSON.stringify(c.nozzles,null,1))}</textarea></label><br><br>
+  <button class=p onclick=saveSettings()>${t('save')}</button></div>`;
+}
+async function saveSettings(){
+  let nz;try{nz=JSON.parse($('#s_nz').value)}catch(e){return alert('Nozzle JSON error')}
+  S.cfg={...S.cfg,name:$('#s_name').value,phones:$('#s_ph').value,address:$('#s_ad').value,gstin:$('#s_gs').value,rates:{MS:num($('#s_ms').value),HSD:num($('#s_hs').value)},shifts:$('#s_sh').value.split('\n').map(s=>s.trim()).filter(Boolean),nozzles:nz};
+  const {error}=await sb.from('pump_settings').upsert({id:1,data:S.cfg});
+  error?alert(error.message):(alert('Saved'),shell(),go('settings'));
+}
+async function backup(){
+  const out={};for(const k of['pump_settings','readings','shift_close','parties','party_txn','dips','purchases','ledger_entries'])out[k]=(await pg(k,'*')).data;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,1)],{type:'application/json'}));a.download='pump-backup-'+today()+'.json';a.click();
+}
+</script>
+<script src="phase2.js"></script>
+<script src="phase3.js"></script>
+<script>init();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js')</script></body></html>
