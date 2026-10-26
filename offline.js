@@ -2,7 +2,7 @@
 // index.html me supabase script ke TURANT BAAD aur main script se PEHLE load hota hai.
 (()=>{
 const OF=window.fetch.bind(window),LS=localStorage,Q='pq',BADK='pq_bad',
-OKT=['readings','shift_close','party_txn','ledger_entries','purchases','dips'];
+OKT=['readings','shift_close','party_txn','ledger_entries','purchases','dips','lube_txn'];
 const J=(o,s=200)=>new Response(typeof o=='string'?o:JSON.stringify(o),{status:s,headers:{'Content-Type':'application/json'}});
 const jp=(k,d)=>{try{return JSON.parse(LS[k]||d)}catch{return JSON.parse(d)}};
 const queue=()=>jp(Q,'[]'),save=q=>{LS[Q]=JSON.stringify(q);badge()};
@@ -59,7 +59,7 @@ function badge(){
 async function warm(){try{if(!navigator.onLine||typeof sb=='undefined')return;const{data:{session}}=await sb.auth.getSession();if(!session)return;
  await Promise.all([sb.from('pump_settings').select('data').eq('id',1).maybeSingle(),
   sb.from('readings').select('nozzle,closing').order('date',{ascending:false}).order('id',{ascending:false}).limit(100),
-  sb.from('parties').select('id,name').order('name'),sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle()])}catch{}}
+  sb.from('parties').select('id,name').order('name'),sb.from('lube_items').select('id,name,price,unit').eq('active',true).order('name'),sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle()])}catch{}}
 
 addEventListener('online',()=>{badge();setTimeout(()=>{sync();warm()},1500)});
 addEventListener('offline',badge);

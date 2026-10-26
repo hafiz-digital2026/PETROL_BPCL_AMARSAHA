@@ -1,4 +1,4 @@
-# Amar Saha BPCL Petrol Pump Software (Phase 1 + 2 + 3 + Offline)
+# Amar Saha HP Petrol Pump Software (Phase 1-5 + Offline) · Software by UltraAccounting
 
 ## Files (sab ek hi folder me, sab GitHub pe upload karni hain)
 | File | Kaam |
@@ -6,9 +6,10 @@
 | `index.html` | Main app: login, shift, khata, dashboard, settings (Phase 1) |
 | `phase2.js` | Stock, Cash/Bank book, Reports, CA Pack, Tally XML, Bank Recon |
 | `phase3.js` | Owner / Manager / Employee roles + Users tab |
+| `phase5.js` | Lubricant, Staff haazri/salary/advance, DSR WhatsApp report |
 | `offline.js` | Offline entry + internet aate hi auto sync |
 | `sw.js`, `manifest.webmanifest` | Install (Add to Home Screen) + app shell cache |
-| `schema.sql`, `schema_phase2.sql`, `schema_phase3.sql` | Database (Supabase me isi order me run karna) |
+| `schema.sql`, `schema_phase2.sql`, `schema_phase3.sql`, `schema_phase4.sql`, `schema_phase5.sql` | Database (Supabase me isi order me run karna) |
 | `README.md` | Yeh guide |
 
 ## STEP 1: Supabase (database, free)
@@ -68,7 +69,7 @@ Settings ke neeche **Danger zone**: pehle Backup download hota hai, phir `RESET`
 - Supabase free project 7 din bina use ke pause hota hai. Roz shift entry hogi to koi dikkat nahi.
 
 ## Abhi nahi hai
-Bill print + logo, PDF export, "kisne entry ki" ka record, poora Bangla (sirf menu/main labels), app ke andar se naya user banana.
+Bill print + logo, PDF export, poora audit log, poora Bangla (sirf menu/main labels), app ke andar se naya user banana.
 
 ## Note
 Petrol/diesel par GST nahi lagta (VAT rate me shamil). GST sirf lubricant jaise saman par.
@@ -82,3 +83,19 @@ Petrol/diesel par GST nahi lagta (VAT rate me shamil). GST sirf lubricant jaise 
 5. **Kharcha:** Shift closing me "+ Expense line" (gift, chai, repair, salary...). Cash se kat ta hai aur Books me jata hai, kisne diya wo naam ke saath.
 6. **Closed by:** shift kisne close ki, uska naam Dashboard me "By" column me dikhta hai.
 7. **CNG:** Settings > Nozzles me CNG nozzle jodo, jaise `{"id":"CNG1","p":"CNG","n":"CNG 1"}` aur CNG rate/kg daalo. Dashboard me kg dikhega.
+
+---
+## Phase 5 (naya version): HP rang, pakka lock, Lubricant, Staff, DSR
+**Purane chalte hue pump par update:** Supabase SQL Editor me `schema_phase4.sql` (pehle chala chuke ho to bhi dobara chala sakte ho), phir `schema_phase5.sql` Run. Uske baad GitHub pe saari files (index.html, phase2.js, phase3.js, phase5.js, offline.js, sw.js, manifest.webmanifest, README.md, SQL) upload > Commit. Login system wahi hai: Supabase > Authentication > Add user, phir app ke Users tab me role.
+
+1. **Pakka lock (database me bhi):** Employee/Manager na rate badal sakta, na opening, na test seema se zyada. Sirf Owner. Galat entry par saaf message aata hai.
+2. **Test seema:** Settings > "Test max (L/nozzle)" (default 10). Dashboard me "Aaj test (L)" card.
+3. **Closed by:** login wale ka naam database khud likhta hai, koi badal nahi sakta.
+4. **Lubricant tab:** item (naam, unit, rate, GST, kam-stock alert), purchase/sale/adjust, stock. Shift closing me "+ Lube line" se bikri, wo total sale aur cash me judti hai. Reports P&L me lube alag dikhta hai.
+5. **Staff tab:** staff list (salary/mahina), roz ki haazri (P / Half / A / Leave), advance/salary/bonus (cash ya bank book me apne aap kharcha), mahine ka hisaab (bana - advance - diya = baaki), staff ko WhatsApp slip.
+6. **DSR WhatsApp:** shift save hote hi report screen + "Owner ko WhatsApp" button. Dashboard me "Aaj ki report" button (din ki saari shifts). Settings me Owner WhatsApp number daalo.
+7. **Settings:** Oil company (HPCL), Owner WhatsApp, Test max.
+8. **Login page:** features ki list + "Software by UltraAccounting, 7602292599".
+9. Employee bhi shift ka kharcha daal sakta hai (pehle database rok deta tha).
+
+**Offline note:** offline bhari shift sync hote waqt agar beech me Owner ne rate badla ho ya kisi aur device se shift bhar di ho, to entry reject hogi aur message aayega. Ek shift ek hi device se bharo.

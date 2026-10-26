@@ -1,29 +1,53 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Amar Saha BPCL Pump</title>
-<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0b4ea2"><style>nav button{text-transform:capitalize;white-space:nowrap}</style>
+<title>HP Petrol Pump</title>
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0a3d91"><style>nav button{text-transform:capitalize;white-space:nowrap}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="offline.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:#f3f5f9;color:#1a2233}
-header{background:#0b4ea2;color:#fff;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
-nav{display:flex;gap:4px;overflow-x:auto;background:#fff;padding:6px;border-bottom:1px solid #dde}
-button{border:0;border-radius:8px;padding:8px 14px;background:#e8eefb;color:#0b4ea2;font-weight:600;cursor:pointer}
-button.on,button.p{background:#0b4ea2;color:#fff}
-main{max-width:980px;margin:auto;padding:12px}
-.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px #0001}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}.row>label{flex:1;min-width:130px;font-size:12px;color:#556}
-input,select,textarea{width:100%;padding:8px;border:1px solid #c8d0e0;border-radius:8px;font:inherit;margin-top:3px}
-table{width:100%;border-collapse:collapse}th,td{padding:6px;text-align:left;border-bottom:1px solid #eef}
-.tw{overflow-x:auto}.big{font-size:22px;font-weight:700}.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.red{color:#c0392b}.grn{color:#1a8a4a}.bar{background:#0b4ea2;height:10px;border-radius:5px}
+:root{--hp:#0a3d91;--hp2:#1565d8;--red:#e2231a;--bg:#eef3fb;--ink:#14213d;--mut:#5b6b88}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 "Segoe UI",Roboto,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(120deg,var(--hp),var(--hp2));color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:4px solid var(--red)}
+header b{font-size:17px;letter-spacing:.3px}header small{opacity:.85}
+.logo{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:#fff;color:var(--hp);font-weight:800;margin-right:8px;border:3px solid var(--red);font-size:13px}
+header button{background:#ffffff22;color:#fff;border:1px solid #ffffff55}
+nav{display:flex;gap:6px;overflow-x:auto;background:#fff;padding:8px;border-bottom:1px solid #d9e2f2;position:sticky;top:0;z-index:5;box-shadow:0 2px 6px #0a3d9112}
+button{border:0;border-radius:10px;padding:9px 15px;background:#e6eefc;color:var(--hp);font-weight:600;cursor:pointer;font:inherit;font-weight:600}
+button:hover{filter:brightness(.96)}button.on,button.p{background:var(--hp);color:#fff}button.p{box-shadow:0 2px 6px #0a3d9140}
+button.wa{background:#25d366;color:#fff}
+main{max-width:1040px;margin:auto;padding:14px}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 2px 10px #0a3d9112;border:1px solid #e3eaf6}
+.card h3{margin:0 0 10px;color:var(--hp)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}.row>label{flex:1;min-width:130px;font-size:12px;color:var(--mut);font-weight:600}
+input,select,textarea{width:100%;padding:9px;border:1px solid #c9d5ea;border-radius:9px;font:inherit;margin-top:3px;background:#fbfdff}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--hp2);border-color:transparent}
+input[readonly]{background:#e9eef7;color:#44506a}
+table{width:100%;border-collapse:collapse}th{background:#f1f5fc;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.3px}th,td{padding:8px;text-align:left;border-bottom:1px solid #edf1f8}
+.tw{overflow-x:auto}.big{font-size:24px;font-weight:800;margin-top:4px}.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.g>.card{margin:0;position:relative;overflow:hidden;color:#fff;border:0}
+.g>.card:nth-child(6n+1){background:linear-gradient(135deg,#0a3d91,#1f6fe5)}.g>.card:nth-child(6n+2){background:linear-gradient(135deg,#e2231a,#ff6a3d)}
+.g>.card:nth-child(6n+3){background:linear-gradient(135deg,#0f9d58,#34c47c)}.g>.card:nth-child(6n+4){background:linear-gradient(135deg,#7b3fe4,#a56cff)}
+.g>.card:nth-child(6n+5){background:linear-gradient(135deg,#f29900,#ffc233)}.g>.card:nth-child(6n){background:linear-gradient(135deg,#00838f,#26c6da)}
+.g>.card small,.g>.card .red,.g>.card b.red{color:#fff}.g>.card .big.red{color:#fff;text-shadow:0 0 1px #0004}
+.ic{position:absolute;right:10px;top:8px;font-size:26px;opacity:.35}
+.red{color:#d0251b}.grn{color:#0f9d58}.bar{background:linear-gradient(90deg,var(--hp),var(--red));height:10px;border-radius:5px}
+.sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}.sum div{background:#f4f7fd;border-radius:10px;padding:8px 10px;font-size:13px}.sum b{display:block;font-size:17px}
+.note{background:#fff8e1;border-left:4px solid #f29900;padding:8px 10px;border-radius:8px;font-size:13px}
+@media(max-width:640px){nav{position:fixed;bottom:0;top:auto;left:0;right:0;border-top:1px solid #d9e2f2;padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}main{padding-bottom:90px}nav button{padding:8px 11px;font-size:13px}}
+.land{min-height:100vh;display:grid;grid-template-columns:1.3fr 1fr;gap:24px;padding:28px;background:radial-gradient(circle at 15% 10%,#1f6fe5 0,#0a3d91 45%,#071f4d 100%);color:#fff;align-items:center}
+.hero h1{font-size:34px;margin:12px 0 6px}.tag{opacity:.9;font-size:17px;margin:0 0 18px}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.feat div{background:#ffffff14;border:1px solid #ffffff26;border-left:4px solid var(--red);border-radius:12px;padding:10px 12px}
+.feat span{font-size:20px;margin-right:6px}.feat b{display:block;margin-top:2px}.feat small{opacity:.8}
+.dev{margin-top:20px;padding-top:14px;border-top:1px solid #ffffff30;display:flex;flex-direction:column;gap:3px}.dev b{font-size:20px}.dev a{color:#ffd54f;font-weight:700}
+.lcard .card{color:var(--ink);max-width:400px;margin:auto;padding:26px;border-top:5px solid var(--red)}.lcard h2{margin-top:0;color:var(--hp)}
+@media(max-width:820px){.land{grid-template-columns:1fr;padding:16px}.lcard{order:-1}.hero h1{font-size:26px}}
 </style></head><body><div id="app"></div>
 <script>
 const SB_URL='https://qvrusvuvmqkngtiztfsb.supabase.co', SB_KEY='sb_publishable_nrrHjpsqP46TQgaIxmfOoQ_R6uc2O6M';
 const sb=supabase.createClient(SB_URL,SB_KEY);
 const L={bn:{dashboard:'ড্যাশবোর্ড',shift:'শিফট ক্লোজিং',parties:'বাকি গ্রাহক',settings:'সেটিংস',today_sale:'আজকের বিক্রি',credit_due:'বকেয়া টাকা',cash:'নগদ',shortage:'ঘাটতি',save:'জমা করুন',logout:'লগআউট',backup:'ব্যাকআপ',opening:'ওপেনিং',closing:'ক্লোজিং',amount:'টাকা'}};
-const DEF={name:'BPCL AMAR SAHA PETROL PUMP',address:'Ranikamat, Chanchal, Malda, WB 732140',phones:'8945038075, 9475972794',gstin:'',
+const DEF={name:'AMAR SAHA HP PETROL PUMP',company:'HPCL',owner_wa:'',test_max:10,address:'Ranikamat, Chanchal, Malda, WB 732140',phones:'8945038075, 9475972794',gstin:'',
  rates:{MS:0,HSD:0,CNG:0},shifts:['Morning (6AM-2PM)','Afternoon (2PM-10PM)','Night (10PM-6AM)'],
  nozzles:[{id:'MS1',p:'MS'},{id:'HSD1',p:'HSD'},{id:'MS1_2',p:'MS',n:'MS1 (M/C 2)'},{id:'HSD1_2',p:'HSD',n:'HSD1 (M/C 2)'},{id:'MS2_2',p:'MS',n:'MS2 (M/C 2)'},{id:'HSD2_2',p:'HSD',n:'HSD2 (M/C 2)'}]};
 let S={lang:localStorage.lang||'en',page:'dash',cfg:DEF,parties:[]};
@@ -41,18 +65,27 @@ async function init(){
   S.cfg={...DEF,...(data?.data||{})}; shell(); go('dash');
 }
 function login(msg=''){
-  $('#app').innerHTML=`<main><div class=card style="max-width:380px;margin:60px auto"><h2>${esc(S.cfg.name)}</h2><p class=red>${esc(msg)}</p>
-  <label>Email<input id=em type=email></label><br><br><label>Password<input id=pw type=password></label><br><br>
-  <button class=p onclick="doLogin()">Login</button></div></main>`;
+  const F=[['⛽','Shift closing','Nozzle reading, test litre, auto opening'],['💳','PhonePe · UPI · HP Card','Cash milan, shortage turant'],['🔥','Petrol · Diesel · CNG','Litre aur kg dono'],['🛢️','Tank stock','Dip, tanker purchase, low alert'],
+   ['🧴','Lubricant','Stock, bikri, GST'],['👷','Staff haazri','Salary, advance, slip WhatsApp'],['🤝','Khata / udhaar','Party ledger, WhatsApp reminder'],['📒','Cash & bank book','Kharcha, bank recon'],
+   ['📈','Reports','P&L, Day book, CA pack, Tally XML'],['📲','DSR WhatsApp','Shift band, owner ko report'],['🔐','Owner · Manager · Staff','Har role ki alag pahunch'],['📴','Offline chalega','Net aate hi sync']];
+  $('#app').innerHTML=`<div class=land><section class=hero><div><span class=logo style="width:48px;height:48px;font-size:16px">HP</span></div>
+  <h1>Smart Petrol Pump Software</h1><p class=tag>Shift, stock, khata, staff aur hisaab, sab ek jagah. Phone aur computer dono par.</p>
+  <div class=feat>${F.map(f=>`<div><span>${f[0]}</span><b>${f[1]}</b><small>${f[2]}</small></div>`).join('')}</div>
+  <div class=dev><small>Software by</small><b>UltraAccounting</b><span>Petrol pump, dukaan aur business software · Chanchal, Malda</span>
+  <span>Apne pump ke liye software chahiye? Call / WhatsApp: <a href="tel:+917602292599">7602292599</a> · <a target=_blank href="https://wa.me/917602292599?text=${encodeURIComponent('Namaskar, mujhe petrol pump software ke baare me jaankari chahiye.')}">WhatsApp</a></span></div></section>
+  <section class=lcard><div class=card><h2>${esc(S.cfg.name)}</h2><p class=red>${esc(msg)}</p>
+  <label>Email<input id=em type=email autocomplete=username></label><br><br><label>Password<input id=pw type=password autocomplete=current-password onkeydown="event.key=='Enter'&&doLogin()"></label><br><br>
+  <button class=p style="width:100%;padding:12px" onclick="doLogin()">Login</button>
+  <p style="text-align:center;font-size:13px;color:#5b6b88">Software support: <a href="tel:+917602292599">7602292599</a></p></div></section></div>`;
 }
 async function doLogin(){
   const {error}=await sb.auth.signInWithPassword({email:$('#em').value.trim(),password:$('#pw').value});
   error?login(error.message):init();
 }
 function shell(){
-  $('#app').innerHTML=`<header><b>${esc(S.cfg.name)}</b><span><button onclick="S.lang=S.lang=='en'?'bn':'en';localStorage.lang=S.lang;shell();go(S.page)">${S.lang=='en'?'বাংলা':'English'}</button>
+  $('#app').innerHTML=`<header><span><span class=logo>HP</span><b>${esc(S.cfg.name)}</b></span><span><button onclick="S.lang=S.lang=='en'?'bn':'en';localStorage.lang=S.lang;shell();go(S.page)">${S.lang=='en'?'বাংলা':'English'}</button>
   <button onclick="backup()">${t('backup')}</button> <button onclick="sb.auth.signOut().then(init)">${t('logout')}</button></span></header>
-  <nav>${['dash','shift','stock','books','parties','reports','recon','settings'].map(p=>`<button id=n_${p} onclick="go('${p}')">${({recon:'Bank Recon'})[p]||t(p=='dash'?'dashboard':p)}</button>`).join('')}</nav><main id=main></main>`;
+  <nav>${['dash','shift','stock','lube','staff','books','parties','reports','recon','settings'].map(p=>`<button id=n_${p} onclick="go('${p}')">${NI[p]||''} ${({recon:'Bank Recon',lube:'Lubricant',staff:'Staff'})[p]||t(p=='dash'?'dashboard':p)}</button>`).join('')}</nav><main id=main></main>`;
 }
 function go(p){
   S.page=p; document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.id=='n_'+p));
@@ -62,7 +95,7 @@ function go(p){
 async function dash(){
   const d7=new Date(Date.now()-6*864e5).toISOString().slice(0,10);
   const [{data:r},{data:tx},{data:sc}]=await Promise.all([
-    sb.from('readings').select('date,product,ltr,amount').gte('date',d7),
+    sb.from('readings').select('date,product,ltr,amount,test_ltr').gte('date',d7),
     pg('party_txn','type,amount'),
     sb.from('shift_close').select('*').order('id',{ascending:false}).limit(8)]);
   const td=(r||[]).filter(x=>x.date==today()),sum=(a,k)=>a.reduce((s,x)=>s+num(x[k]),0);
@@ -70,31 +103,35 @@ async function dash(){
   const days={};(r||[]).forEach(x=>days[x.date]=(days[x.date]||0)+num(x.amount));
   const mx=Math.max(1,...Object.values(days));
   $('#main').innerHTML=`<div class=g>
-  <div class=card>${t('today_sale')}<div class=big>${inr(sum(td,'amount'))}</div></div>
-  <div class=card>MS<div class=big>${sum(td.filter(x=>x.product=='MS'),'ltr').toFixed(1)} L</div></div>
-  <div class=card>HSD<div class=big>${sum(td.filter(x=>x.product=='HSD'),'ltr').toFixed(1)} L</div></div>
-  ${S.cfg.nozzles.some(n=>n.p=='CNG')?`<div class=card>CNG<div class=big>${sum(td.filter(x=>x.product=='CNG'),'ltr').toFixed(1)} kg</div></div>`:''}
-  <div class=card>${t('credit_due')}<div class="big red">${inr(due)}</div></div></div>
+  <div class=card><span class=ic>💰</span>${t('today_sale')}<div class=big>${inr(sum(td,'amount'))}</div></div>
+  <div class=card><span class=ic>⛽</span>Petrol (MS)<div class=big>${sum(td.filter(x=>x.product=='MS'),'ltr').toFixed(1)} L</div></div>
+  <div class=card><span class=ic>🚚</span>Diesel (HSD)<div class=big>${sum(td.filter(x=>x.product=='HSD'),'ltr').toFixed(1)} L</div></div>
+  ${S.cfg.nozzles.some(n=>n.p=='CNG')?`<div class=card><span class=ic>🔥</span>CNG<div class=big>${sum(td.filter(x=>x.product=='CNG'),'ltr').toFixed(1)} kg</div></div>`:''}
+  <div class=card><span class=ic>🧪</span>Aaj test (L)<div class=big>${sum(td,'test_ltr').toFixed(1)} L</div><small>wapas tank me</small></div>
+  <div class=card><span class=ic>📕</span>${t('credit_due')}<div class="big red">${inr(due)}</div></div></div>
+  <div class=card><b>Aaj ki report (DSR)</b> &nbsp;<button class=wa onclick="dayDSR()">📲 WhatsApp pe bhejo</button> <small>sab shift ka total owner ko</small></div>
   <div class=card><b>Last 7 days</b>${Object.keys(days).sort().map(k=>`<div>${k} ${inr(days[k])}<div class=bar style="width:${days[k]/mx*100}%"></div></div>`).join('')||'<p>No data yet</p>'}</div>
   <div class="card tw"><b>Recent shifts</b><table><tr><th>Date</th><th>Shift</th><th>Sale</th><th>Credit</th><th>PhonePe</th><th>UPI</th><th>HP Card</th><th>${t('cash')}</th><th>${t('shortage')}</th><th>By</th></tr>
   ${(sc||[]).map(x=>`<tr><td>${x.date}</td><td>${esc(x.shift)}</td><td>${inr(x.total_sale)}</td><td>${inr(x.credit)}</td><td>${inr(x.phonepe)}</td><td>${inr(x.upi)}</td><td>${inr(x.hpcard)}</td><td>${inr(x.cash_counted)}</td><td class="${x.shortage>0?'red':'grn'}">${inr(x.shortage)}</td><td>${esc(x.closed_by)}</td>${S.me?.role=='owner'?`<td><button title="Delete shift" onclick="dShift(${x.id})">🗑</button></td>`:''}</tr>`).join('')}</table></div>`;
 }
 
+const NI={dash:'📊',shift:'⛽',stock:'🛢️',lube:'🧴',staff:'👷',books:'📒',parties:'🤝',reports:'📈',recon:'🏦',settings:'⚙️',users:'👥'};
 const prods=()=>[...new Set(S.cfg.nozzles.map(n=>n.p))];
 async function shiftPage(){
   const {data}=await sb.from('readings').select('nozzle,closing').order('date',{ascending:false}).order('id',{ascending:false}).limit(100);
   const last={};(data||[]).forEach(r=>{if(!(r.nozzle in last))last[r.nozzle]=r.closing});
-  const {data:ps}=await sb.from('parties').select('id,name').order('name');S.parties=ps||[];
+  const [{data:ps},{data:li}]=await Promise.all([sb.from('parties').select('id,name').order('name'),sb.from('lube_items').select('id,name,price,unit').eq('active',true).order('name')]);S.parties=ps||[];S.lubes=li||[];
   const c=S.cfg,own=S.me?.role=='owner',who=S.me?.name||S.me?.email||'';
   $('#main').innerHTML=`<div class=card><h3>${t('shift')}</h3><div class=row>
   <label>Date<input type=date id=sd value="${today()}"></label>
   <label>Shift<select id=ss>${c.shifts.map(s=>`<option>${esc(s)}</option>`).join('')}</select></label>
-  ${prods().map(p=>`<label>${p} rate<input type=number step=.01 id=r_${p} value="${c.rates[p]||0}" oninput=calc()></label>`).join('')}
+  ${prods().map(p=>`<label>${p} rate<input type=number step=.01 id=r_${p} value="${c.rates[p]||0}" ${own?'':'readonly'} oninput=calc()></label>`).join('')}
   <label>Closed by<input id=cb value="${esc(who)}" readonly></label></div>
   <div class=tw><table><tr><th>Nozzle</th><th>${t('opening')}</th><th>${t('closing')}</th><th>Test (L)</th><th>Litre</th><th>${t('amount')}</th></tr>
   ${c.nozzles.map(n=>`<tr data-n="${n.id}" data-p="${n.p}"><td>${esc(n.n||n.id)}</td><td><input type=number step=.01 class=o value="${last[n.id]??0}" ${(n.id in last)&&!own?'readonly style="background:#eef"':''} oninput=calc()></td>
-  <td><input type=number step=.01 class=cl oninput=calc()></td><td><input type=number step=.01 class=ts value=0 oninput=calc()></td><td class=l>0</td><td class=a>0</td></tr>`).join('')}</table></div>
-  <small>Opening pichli closing se apne aap aati hai (sirf Owner badal sakta hai). Test = subah pump chalu karte waqt nikala hua tel (wapas tank me daala), sale me nahi judta.</small></div>
+  <td><input type=number step=.01 class=cl oninput=calc()></td><td><input type=number step=.01 min=0 max=${c.test_max||10} class=ts value=0 oninput=calc()></td><td class=l>0</td><td class=a>0</td></tr>`).join('')}</table></div>
+  <small>Opening pichli closing se apne aap aati hai (sirf Owner badal sakta hai). Test = subah pump chalu karte waqt nikala hua tel (wapas tank me daala), sale me nahi judta. Test zyada se zyada ${c.test_max||10} L/nozzle. Rate sirf Owner Settings se badalta hai.</small></div>
+  <div class=card><b>🧴 Lubricant / mobil bikri (is shift me)</b><div id=lu></div><button onclick=addLu()>+ Lube line</button></div>
   <div class=card><b>${t('credit_due')} (Credit sales)</b><div id=cr></div><button onclick=addCr()>+ Credit line</button></div>
   <div class=card><b>Kharcha (cash se diya: gift, chai, repair etc.)</b><div id=ex></div><button onclick=addEx()>+ Expense line</button></div>
   <div class=card><div class=row><label>PhonePe<input type=number id=pe oninput=calc()></label><label>UPI / other<input type=number id=upi oninput=calc()></label><label>HP Card<input type=number id=hp oninput=calc()></label><label>${t('cash')} counted<input type=number id=cc oninput=calc()></label></div>
@@ -113,9 +150,10 @@ function calc(){
     const o=num(tr.querySelector('.o').value),cl=tr.querySelector('.cl').value,ts=num(tr.querySelector('.ts').value),rate=num($('#r_'+tr.dataset.p).value);
     const l=cl===''?0:num(cl)-o-ts,a=l*rate;tr.querySelector('.l').textContent=l.toFixed(2);tr.querySelector('.a').textContent=a.toFixed(2);tot+=a;
   });
+  const lu=[...document.querySelectorAll('.lul')].reduce((a,d)=>{const it=S.lubes.find(x=>x.id==d.querySelector('.lp').value);return a+num(d.querySelector('.lq').value)*num(it?.price)},0);tot+=lu;
   const sx=s=>[...document.querySelectorAll(s)].reduce((a,e)=>a+num(e.value),0),cr=sx('.ca'),ex=sx('.ea'),dg=num($('#pe').value)+num($('#upi').value)+num($('#hp').value),exp=tot-cr-dg-ex,sh=exp-num($('#cc').value);
-  window.T={tot,cr,ex,exp,sh};
-  $('#sum').innerHTML=`Total sale <b>${inr(tot)}</b> | Credit <b>${inr(cr)}</b> | PhonePe/UPI/HP card <b>${inr(dg)}</b> | Kharcha <b>${inr(ex)}</b> | Expected cash <b>${inr(exp)}</b> | ${t('shortage')} <b class="${sh>0?'red':'grn'}">${inr(sh)}</b>`;
+  window.T={tot,cr,ex,exp,sh,lu,dg};
+  $('#sum').innerHTML=`<div class=sum><div>Total sale<b>${inr(tot)}</b></div><div>Lube<b>${inr(lu)}</b></div><div>Credit<b>${inr(cr)}</b></div><div>PhonePe/UPI/HP card<b>${inr(dg)}</b></div><div>Kharcha<b>${inr(ex)}</b></div><div>Expected cash<b>${inr(exp)}</b></div><div>${t('shortage')}<b class="${sh>0?'red':'grn'}">${inr(sh)}</b></div></div>`;
 }
 async function saveShift(){
   const date=$('#sd').value,shift=$('#ss').value,who=$('#cb').value,rows=[];
@@ -123,6 +161,7 @@ async function saveShift(){
     const cl=tr.querySelector('.cl').value;if(cl==='')continue;
     const o=num(tr.querySelector('.o').value),c=num(cl),ts=num(tr.querySelector('.ts').value);
     if(c<o+ts) return alert('Closing, opening+test se kam hai: '+tr.dataset.n);
+    if(ts<0||(S.me?.role!='owner'&&ts>(S.cfg.test_max||10))) return alert('Test litre '+(S.cfg.test_max||10)+' se zyada nahi: '+tr.dataset.n);
     const rate=num($('#r_'+tr.dataset.p).value),l=c-o-ts;
     rows.push({date,shift,nozzle:tr.dataset.n,product:tr.dataset.p,opening:o,closing:c,test_ltr:ts,ltr:l,rate,amount:l*rate});
   }
@@ -135,8 +174,11 @@ async function saveShift(){
   if(!e&&tx.length)e=(await sb.from('party_txn').insert(tx)).error;
   const ex=[...document.querySelectorAll('.exl')].map(d=>({date,book:'cash',type:'out',category:d.querySelector('.ec').value,amount:num(d.querySelector('.ea').value),note:'Shift '+shift+(d.querySelector('.en').value?': '+d.querySelector('.en').value:''),by_name:who})).filter(x=>x.amount>0);
   if(!e&&ex.length)e=(await sb.from('ledger_entries').insert(ex)).error;
-  if(!e)e=(await sb.from('shift_close').insert({date,shift,total_sale:T.tot,credit:T.cr,upi:num($('#upi').value),phonepe:num($('#pe').value),hpcard:num($('#hp').value),expense:T.ex,expected_cash:T.exp,cash_counted:num($('#cc').value),shortage:T.sh,closed_by:who})).error;
-  e?alert(e.message):(alert('Saved'),go('dash'));
+  const lu=[...document.querySelectorAll('.lul')].map(d=>{const it=S.lubes.find(x=>x.id==d.querySelector('.lp').value),q=num(d.querySelector('.lq').value);return it&&q>0?{item_id:it.id,date,type:'sale',qty:q,rate:num(it.price),amount:q*num(it.price),shift,by_name:who}:null}).filter(Boolean);
+  if(!e&&lu.length)e=(await sb.from('lube_txn').insert(lu)).error;
+  const sc={date,shift,total_sale:T.tot,lube:T.lu,credit:T.cr,upi:num($('#upi').value),phonepe:num($('#pe').value),hpcard:num($('#hp').value),expense:T.ex,expected_cash:T.exp,cash_counted:num($('#cc').value),shortage:T.sh,closed_by:who};
+  if(!e)e=(await sb.from('shift_close').insert(sc)).error;
+  e?alert(e.message):showDSR(sc,rows);
 }
 
 async function partiesPage(){
@@ -165,6 +207,7 @@ function settingsPage(){
   const c=S.cfg;
   $('#main').innerHTML=`<div class=card><h3>${t('settings')}</h3><div class=row><label>Pump name<input id=s_name value="${esc(c.name)}"></label><label>Phones<input id=s_ph value="${esc(c.phones)}"></label></div>
   <div class=row><label>Address<input id=s_ad value="${esc(c.address)}"></label><label>GSTIN / VAT (later)<input id=s_gs value="${esc(c.gstin)}"></label></div>
+  <div class=row><label>Oil company<input id=s_co value="${esc(c.company||'HPCL')}"></label><label>Owner WhatsApp (report ke liye)<input id=s_wa value="${esc(c.owner_wa||'')}" placeholder="10 digit"></label><label>Test max (L/nozzle)<input type=number id=s_tm value="${c.test_max||10}"></label></div>
   <div class=row><label>MS rate<input type=number step=.01 id=s_ms value="${c.rates.MS}"></label><label>HSD rate<input type=number step=.01 id=s_hs value="${c.rates.HSD}"></label><label>CNG rate/kg<input type=number step=.01 id=s_cg value="${c.rates.CNG||0}"></label></div>
   <label>Shifts (one per line)<textarea id=s_sh rows=3>${esc(c.shifts.join('\n'))}</textarea></label><br><br>
   <label>Nozzles (JSON: id, p=MS/HSD, n=display name)<textarea id=s_nz rows=8>${esc(JSON.stringify(c.nozzles,null,1))}</textarea></label><br><br>
@@ -172,15 +215,16 @@ function settingsPage(){
 }
 async function saveSettings(){
   let nz;try{nz=JSON.parse($('#s_nz').value)}catch(e){return alert('Nozzle JSON error')}
-  S.cfg={...S.cfg,name:$('#s_name').value,phones:$('#s_ph').value,address:$('#s_ad').value,gstin:$('#s_gs').value,rates:{MS:num($('#s_ms').value),HSD:num($('#s_hs').value),CNG:num($('#s_cg').value)},shifts:$('#s_sh').value.split('\n').map(s=>s.trim()).filter(Boolean),nozzles:nz};
+  S.cfg={...S.cfg,name:$('#s_name').value,phones:$('#s_ph').value,address:$('#s_ad').value,gstin:$('#s_gs').value,company:$('#s_co').value.trim()||'HPCL',owner_wa:$('#s_wa').value.replace(/\D/g,'').slice(-10),test_max:num($('#s_tm').value)||10,rates:{MS:num($('#s_ms').value),HSD:num($('#s_hs').value),CNG:num($('#s_cg').value)},shifts:$('#s_sh').value.split('\n').map(s=>s.trim()).filter(Boolean),nozzles:nz};
   const {error}=await sb.from('pump_settings').upsert({id:1,data:S.cfg});
   error?alert(error.message):(alert('Saved'),shell(),go('settings'));
 }
 async function backup(){
-  const out={};for(const k of['pump_settings','readings','shift_close','parties','party_txn','dips','purchases','ledger_entries'])out[k]=(await pg(k,'*')).data;
+  const out={};for(const k of['pump_settings','readings','shift_close','parties','party_txn','dips','purchases','ledger_entries','staff','attendance','staff_pay','lube_items','lube_txn'])out[k]=(await pg(k,'*')).data;
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(out,null,1)],{type:'application/json'}));a.download='pump-backup-'+today()+'.json';a.click();
 }
 </script>
 <script src="phase2.js"></script>
 <script src="phase3.js"></script>
+<script src="phase5.js"></script>
 <script>init();if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js')</script></body></html>

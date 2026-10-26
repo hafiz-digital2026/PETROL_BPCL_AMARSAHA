@@ -1,10 +1,10 @@
 // Phase 3: Owner / Manager / Employee roles (UI side; asli suraksha RLS me hai)
-const ACL={owner:['dash','shift','stock','books','parties','reports','recon','settings','users'],manager:['dash','shift','stock','books','parties','reports','recon'],employee:['shift']};
+const ACL={owner:['dash','shift','stock','lube','staff','books','parties','reports','recon','settings','users'],manager:['dash','shift','stock','lube','staff','books','parties','reports','recon'],employee:['shift']};
 const og3=go;
 sb.auth.onAuthStateChange(e=>{if(e=='SIGNED_OUT')S.me=null});
 function applyRole(){const r=S.me.role,al=ACL[r]||[];
  document.querySelectorAll('nav button').forEach(b=>{b.style.display=al.includes(b.id.slice(2))?'':'none'});
- if(r=='owner'&&!$('#n_users'))document.querySelector('nav').insertAdjacentHTML('beforeend',`<button id=n_users onclick="go('users')">Users</button>`);
+ if(r=='owner'&&!$('#n_users'))document.querySelector('nav').insertAdjacentHTML('beforeend',`<button id=n_users onclick="go('users')">👥 Users</button>`);
  const h=document.querySelector('header b');if(h&&!$('#rb'))h.insertAdjacentHTML('afterend',` <small id=rb>(${esc(S.me.name||S.me.email||'')} · ${esc(r||'no role')})</small>`);
  if(r=='employee')document.querySelectorAll('header button').forEach(b=>{if(/backup/.test(b.getAttribute('onclick')||''))b.style.display='none'})}
 go=async p=>{
