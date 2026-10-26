@@ -72,3 +72,13 @@ Bill print + logo, PDF export, "kisne entry ki" ka record, poora Bangla (sirf me
 
 ## Note
 Petrol/diesel par GST nahi lagta (VAT rate me shamil). GST sirf lubricant jaise saman par.
+
+---
+## Phase 4: HP pump ke liye (test, PhonePe/HP card, CNG, kharcha, naam)
+1. Supabase SQL Editor me `schema_phase4.sql` run karo (**pehle**, phir naya `index.html` aur `phase2.js` upload).
+2. **Opening reading** ab pichli closing se aati hai aur Employee/Manager badal nahi sakte (sirf Owner). Sabse pehli baar (jab pichli reading nahi) sab likh sakte hain.
+3. **Test (L):** har nozzle ke saamne subah ka test tel daalo. Wo sale se kat jata hai (tank me wapas jata hai).
+4. **Payment:** PhonePe, UPI/other, HP Card, Cash counted. HP Card ka paisa cash me nahi aata, isliye cash se kat jata hai. Company jab bank me bheje to **Books > Bank > In > HP card settlement** likho. **Reports** me "HP card (company se aana baki)" dikhega.
+5. **Kharcha:** Shift closing me "+ Expense line" (gift, chai, repair, salary...). Cash se kat ta hai aur Books me jata hai, kisne diya wo naam ke saath.
+6. **Closed by:** shift kisne close ki, uska naam Dashboard me "By" column me dikhta hai.
+7. **CNG:** Settings > Nozzles me CNG nozzle jodo, jaise `{"id":"CNG1","p":"CNG","n":"CNG 1"}` aur CNG rate/kg daalo. Dashboard me kg dikhega.

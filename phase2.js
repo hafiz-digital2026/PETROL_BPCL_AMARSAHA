@@ -1,7 +1,7 @@
 // Phase 2: Stock, Cash/Bank Books, Reports (CA Pack, Tally), Bank Reconciliation
 const TK=[['T1','MS'],['T2','HSD'],['T3','MS'],['T4','HSD'],['T5','MS'],['T6','HSD']],LOW=2000,
-EXP=['Salary','Expense','Electricity','Rent','Other'],
-CAT=['Opening balance','Sales deposit','Party receipt','Purchase payment','Transfer','Salary','Electricity','Rent','Expense','Other'];
+EXP=['Salary','Expense','Electricity','Rent','Gift','Staff welfare','Repair','Office/Misc','Other'],
+CAT=['Opening balance','Sales deposit','Party receipt','Purchase payment','Transfer','HP card settlement','Salary','Electricity','Rent','Gift','Staff welfare','Repair','Office/Misc','Expense','Other'];
 Object.assign(L.bn,{stock:'স্টক',books:'ক্যাশ ও ব্যাংক বুক',reports:'রিপোর্ট'});
 const sm=(a,k)=>a.reduce((s,x)=>s+num(x[k]),0),M=h=>$('#main').innerHTML=h;
 const q=async(tb,f)=>{if(f&&/limit\(/.test(f)){return(await f(sb.from(tb).select('*'))).data||[]}const o=[];for(let i=0;;i+=1000){let r=sb.from(tb).select('*');if(f)r=f(r);const{data}=await r.range(i,i+999);if(!data?.length)break;o.push(...data);if(data.length<1000)break}return o};
@@ -53,20 +53,20 @@ async function books(){
  const all=await q('ledger_entries',r=>r.order('date',{ascending:false}).order('id',{ascending:false})),bal=b=>all.filter(x=>x.book==b).reduce((s,x)=>s+(x.type=='in'?1:-1)*num(x.amount),0);
  M(`<div class=g><div class=card>Cash book<div class=big>${inr(bal('cash'))}</div></div><div class=card>Bank book<div class=big>${inr(bal('bank'))}</div></div></div>
  <div class=card><h3>New entry (cash/bank/expense/salary)</h3><div class=row><label>Date<input type=date id=ld value="${today()}"></label><label>Book<select id=lb><option value=cash>Cash</option><option value=bank>Bank</option></select></label><label>In/Out<select id=lt><option value=in>In (jama)</option><option value=out>Out (kharcha)</option></select></label><label>Category<select id=lc>${CAT.map(c=>`<option>${c}</option>`).join('')}</select></label><label>Amount<input type=number id=la></label><label>Note<input id=ln></label></div>
- <button class=p onclick="num($('#la').value)>0?ins('ledger_entries',{date:$('#ld').value,book:$('#lb').value,type:$('#lt').value,category:$('#lc').value,amount:num($('#la').value),note:$('#ln').value},books):alert('Amount?')">Save</button></div>
- <div class="card tw"><table><tr><th>Date</th><th>Book</th><th>In/Out</th><th>Category</th><th>Amount</th><th>Note</th><th>Recon</th></tr>${all.slice(0,80).map(x=>`<tr><td>${x.date}</td><td>${x.book}</td><td>${x.type}</td><td>${esc(x.category)}</td><td>${inr(x.amount)}</td><td>${esc(x.note)}</td><td>${x.recon?'✓':''}</td>${del('ledger_entries',x.id)}</tr>`).join('')}</table></div>`);
+ <button class=p onclick="num($('#la').value)>0?ins('ledger_entries',{date:$('#ld').value,book:$('#lb').value,type:$('#lt').value,category:$('#lc').value,amount:num($('#la').value),note:$('#ln').value,by_name:S.me?.name||S.me?.email||''},books):alert('Amount?')">Save</button></div>
+ <div class="card tw"><table><tr><th>Date</th><th>Book</th><th>In/Out</th><th>Category</th><th>Amount</th><th>Note</th><th>By</th><th>Recon</th></tr>${all.slice(0,80).map(x=>`<tr><td>${x.date}</td><td>${x.book}</td><td>${x.type}</td><td>${esc(x.category)}</td><td>${inr(x.amount)}</td><td>${esc(x.note)}</td><td>${esc(x.by_name)}</td><td>${x.recon?'✓':''}</td>${del('ledger_entries',x.id)}</tr>`).join('')}</table></div>`);
 }
 
 async function reports(){
  const f=S.rf||(S.rf=[today().slice(0,8)+'01',today()]),w=r=>r.gte('date',f[0]).lte('date',f[1]);
- const[rd,pu,le,ps,tx,all]=await Promise.all([q('readings',w),q('purchases',w),q('ledger_entries',w),q('parties'),q('party_txn'),q('ledger_entries')]);
+ const[rd,pu,le,ps,tx,all,scs]=await Promise.all([q('readings',w),q('purchases',w),q('ledger_entries',w),q('parties'),q('party_txn'),q('ledger_entries'),q('shift_close')]);
  const sale=sm(rd,'amount'),pur=sm(pu,'amount'),ex=sm(le.filter(x=>x.type=='out'&&EXP.includes(x.category)),'amount'),
  bal=b=>all.filter(x=>x.book==b).reduce((s,x)=>s+(x.type=='in'?1:-1)*num(x.amount),0),due={};
  tx.forEach(x=>due[x.party_id]=(due[x.party_id]||0)+(x.type=='credit'?1:-1)*num(x.amount));
  const po=ps.map(p=>[p.name,p.phone||'',due[p.id]||0]);window.RP={rd,pu,le,po};
  M(`<div class=card><div class=row><label>From<input type=date id=rf value=${f[0]}></label><label>To<input type=date id=rt value=${f[1]}></label></div><button class=p onclick="S.rf=[$('#rf').value,$('#rt').value];reports()">Show</button></div>
  <div class="card tw"><h3>Profit & Loss</h3><table><tr><td>Sales</td><td>${inr(sale)}</td></tr><tr><td>Purchases</td><td>${inr(pur)}</td></tr><tr><td><b>Gross profit</b></td><td><b>${inr(sale-pur)}</b></td></tr><tr><td>Expenses (salary, rent, etc.)</td><td>${inr(ex)}</td></tr><tr><td><b>Net profit</b></td><td><b class="${sale-pur-ex<0?'red':'grn'}">${inr(sale-pur-ex)}</b></td></tr></table>
- <h3>Balances (trial summary)</h3><table><tr><td>Cash book</td><td>${inr(bal('cash'))}</td></tr><tr><td>Bank book</td><td>${inr(bal('bank'))}</td></tr><tr><td>Debtors (party due)</td><td>${inr(po.reduce((s,x)=>s+x[2],0))}</td></tr></table></div>
+ <h3>Balances (trial summary)</h3><table><tr><td>Cash book</td><td>${inr(bal('cash'))}</td></tr><tr><td>Bank book</td><td>${inr(bal('bank'))}</td></tr><tr><td>HP card (company se aana baki)</td><td>${inr(sm(scs,'hpcard')-all.filter(x=>x.category=='HP card settlement'&&x.type=='in').reduce((a,x)=>a+num(x.amount),0))}</td></tr><tr><td>Debtors (party due)</td><td>${inr(po.reduce((s,x)=>s+x[2],0))}</td></tr></table></div>
  <div class=card><h3>CA Pack</h3><button onclick="csv('daybook',dayBook())">Day book (Excel/CSV)</button> <button onclick="csv('party-outstanding',[['Party','Phone','Due'],...RP.po])">Party outstanding</button> <button onclick="tally()">Tally XML</button></div>
  <div class="card tw"><h3>Party outstanding</h3><table>${po.filter(x=>x[2]>0).map(x=>`<tr><td>${esc(x[0])}</td><td>${inr(x[2])}</td><td><a target=_blank href="https://wa.me/91${String(x[1]).replace(/\D/g,'').slice(-10)}?text=${encodeURIComponent('Namaskar '+x[0]+', '+S.cfg.name+' me aapka '+x[2].toFixed(0)+' taka baki hai. Kripya jama kar dein.')}">WhatsApp</a></td></tr>`).join('')}</table></div>`);
 }

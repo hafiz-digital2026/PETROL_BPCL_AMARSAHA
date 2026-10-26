@@ -24,7 +24,7 @@ const SB_URL='https://qvrusvuvmqkngtiztfsb.supabase.co', SB_KEY='sb_publishable_
 const sb=supabase.createClient(SB_URL,SB_KEY);
 const L={bn:{dashboard:'ড্যাশবোর্ড',shift:'শিফট ক্লোজিং',parties:'বাকি গ্রাহক',settings:'সেটিংস',today_sale:'আজকের বিক্রি',credit_due:'বকেয়া টাকা',cash:'নগদ',shortage:'ঘাটতি',save:'জমা করুন',logout:'লগআউট',backup:'ব্যাকআপ',opening:'ওপেনিং',closing:'ক্লোজিং',amount:'টাকা'}};
 const DEF={name:'BPCL AMAR SAHA PETROL PUMP',address:'Ranikamat, Chanchal, Malda, WB 732140',phones:'8945038075, 9475972794',gstin:'',
- rates:{MS:0,HSD:0},shifts:['Morning (6AM-2PM)','Afternoon (2PM-10PM)','Night (10PM-6AM)'],
+ rates:{MS:0,HSD:0,CNG:0},shifts:['Morning (6AM-2PM)','Afternoon (2PM-10PM)','Night (10PM-6AM)'],
  nozzles:[{id:'MS1',p:'MS'},{id:'HSD1',p:'HSD'},{id:'MS1_2',p:'MS',n:'MS1 (M/C 2)'},{id:'HSD1_2',p:'HSD',n:'HSD1 (M/C 2)'},{id:'MS2_2',p:'MS',n:'MS2 (M/C 2)'},{id:'HSD2_2',p:'HSD',n:'HSD2 (M/C 2)'}]};
 let S={lang:localStorage.lang||'en',page:'dash',cfg:DEF,parties:[]};
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -73,59 +73,69 @@ async function dash(){
   <div class=card>${t('today_sale')}<div class=big>${inr(sum(td,'amount'))}</div></div>
   <div class=card>MS<div class=big>${sum(td.filter(x=>x.product=='MS'),'ltr').toFixed(1)} L</div></div>
   <div class=card>HSD<div class=big>${sum(td.filter(x=>x.product=='HSD'),'ltr').toFixed(1)} L</div></div>
+  ${S.cfg.nozzles.some(n=>n.p=='CNG')?`<div class=card>CNG<div class=big>${sum(td.filter(x=>x.product=='CNG'),'ltr').toFixed(1)} kg</div></div>`:''}
   <div class=card>${t('credit_due')}<div class="big red">${inr(due)}</div></div></div>
   <div class=card><b>Last 7 days</b>${Object.keys(days).sort().map(k=>`<div>${k} ${inr(days[k])}<div class=bar style="width:${days[k]/mx*100}%"></div></div>`).join('')||'<p>No data yet</p>'}</div>
-  <div class="card tw"><b>Recent shifts</b><table><tr><th>Date</th><th>Shift</th><th>Sale</th><th>Credit</th><th>UPI</th><th>${t('cash')}</th><th>${t('shortage')}</th></tr>
-  ${(sc||[]).map(x=>`<tr><td>${x.date}</td><td>${esc(x.shift)}</td><td>${inr(x.total_sale)}</td><td>${inr(x.credit)}</td><td>${inr(x.upi)}</td><td>${inr(x.cash_counted)}</td><td class="${x.shortage>0?'red':'grn'}">${inr(x.shortage)}</td>${S.me?.role=='owner'?`<td><button title="Delete shift" onclick="dShift(${x.id})">🗑</button></td>`:''}</tr>`).join('')}</table></div>`;
+  <div class="card tw"><b>Recent shifts</b><table><tr><th>Date</th><th>Shift</th><th>Sale</th><th>Credit</th><th>PhonePe</th><th>UPI</th><th>HP Card</th><th>${t('cash')}</th><th>${t('shortage')}</th><th>By</th></tr>
+  ${(sc||[]).map(x=>`<tr><td>${x.date}</td><td>${esc(x.shift)}</td><td>${inr(x.total_sale)}</td><td>${inr(x.credit)}</td><td>${inr(x.phonepe)}</td><td>${inr(x.upi)}</td><td>${inr(x.hpcard)}</td><td>${inr(x.cash_counted)}</td><td class="${x.shortage>0?'red':'grn'}">${inr(x.shortage)}</td><td>${esc(x.closed_by)}</td>${S.me?.role=='owner'?`<td><button title="Delete shift" onclick="dShift(${x.id})">🗑</button></td>`:''}</tr>`).join('')}</table></div>`;
 }
 
+const prods=()=>[...new Set(S.cfg.nozzles.map(n=>n.p))];
 async function shiftPage(){
   const {data}=await sb.from('readings').select('nozzle,closing').order('date',{ascending:false}).order('id',{ascending:false}).limit(100);
   const last={};(data||[]).forEach(r=>{if(!(r.nozzle in last))last[r.nozzle]=r.closing});
   const {data:ps}=await sb.from('parties').select('id,name').order('name');S.parties=ps||[];
-  const c=S.cfg;
+  const c=S.cfg,own=S.me?.role=='owner',who=S.me?.name||S.me?.email||'';
   $('#main').innerHTML=`<div class=card><h3>${t('shift')}</h3><div class=row>
   <label>Date<input type=date id=sd value="${today()}"></label>
   <label>Shift<select id=ss>${c.shifts.map(s=>`<option>${esc(s)}</option>`).join('')}</select></label>
-  <label>MS rate<input type=number step=.01 id=r_MS value="${c.rates.MS}" oninput=calc()></label>
-  <label>HSD rate<input type=number step=.01 id=r_HSD value="${c.rates.HSD}" oninput=calc()></label></div>
-  <div class=tw><table><tr><th>Nozzle</th><th>${t('opening')}</th><th>${t('closing')}</th><th>Litre</th><th>${t('amount')}</th></tr>
-  ${c.nozzles.map(n=>`<tr data-n="${n.id}" data-p="${n.p}"><td>${esc(n.n||n.id)}</td><td><input type=number step=.01 class=o value="${last[n.id]??0}" oninput=calc()></td>
-  <td><input type=number step=.01 class=cl oninput=calc()></td><td class=l>0</td><td class=a>0</td></tr>`).join('')}</table></div></div>
+  ${prods().map(p=>`<label>${p} rate<input type=number step=.01 id=r_${p} value="${c.rates[p]||0}" oninput=calc()></label>`).join('')}
+  <label>Closed by<input id=cb value="${esc(who)}" readonly></label></div>
+  <div class=tw><table><tr><th>Nozzle</th><th>${t('opening')}</th><th>${t('closing')}</th><th>Test (L)</th><th>Litre</th><th>${t('amount')}</th></tr>
+  ${c.nozzles.map(n=>`<tr data-n="${n.id}" data-p="${n.p}"><td>${esc(n.n||n.id)}</td><td><input type=number step=.01 class=o value="${last[n.id]??0}" ${(n.id in last)&&!own?'readonly style="background:#eef"':''} oninput=calc()></td>
+  <td><input type=number step=.01 class=cl oninput=calc()></td><td><input type=number step=.01 class=ts value=0 oninput=calc()></td><td class=l>0</td><td class=a>0</td></tr>`).join('')}</table></div>
+  <small>Opening pichli closing se apne aap aati hai (sirf Owner badal sakta hai). Test = subah pump chalu karte waqt nikala hua tel (wapas tank me daala), sale me nahi judta.</small></div>
   <div class=card><b>${t('credit_due')} (Credit sales)</b><div id=cr></div><button onclick=addCr()>+ Credit line</button></div>
-  <div class=card><div class=row><label>UPI / Card<input type=number id=upi oninput=calc()></label><label>${t('cash')} counted<input type=number id=cc oninput=calc()></label></div>
+  <div class=card><b>Kharcha (cash se diya: gift, chai, repair etc.)</b><div id=ex></div><button onclick=addEx()>+ Expense line</button></div>
+  <div class=card><div class=row><label>PhonePe<input type=number id=pe oninput=calc()></label><label>UPI / other<input type=number id=upi oninput=calc()></label><label>HP Card<input type=number id=hp oninput=calc()></label><label>${t('cash')} counted<input type=number id=cc oninput=calc()></label></div>
   <div id=sum></div><br><button class=p onclick=saveShift()>${t('save')}</button></div>`;
   calc();
 }
 function addCr(){
   $('#cr').insertAdjacentHTML('beforeend',`<div class="row crl"><label>Party<select class=cp>${S.parties.map(p=>`<option value=${p.id}>${esc(p.name)}</option>`).join('')}</select></label><label>${t('amount')}<input type=number class=ca oninput=calc()></label></div>`);
 }
+function addEx(){
+  $('#ex').insertAdjacentHTML('beforeend',`<div class="row exl"><label>Type<select class=ec>${EXP.map(c=>`<option>${c}</option>`).join('')}</select></label><label>${t('amount')}<input type=number class=ea oninput=calc()></label><label>Kisko / kya<input class=en></label></div>`);
+}
 function calc(){
   let tot=0;
   document.querySelectorAll('tr[data-n]').forEach(tr=>{
-    const o=num(tr.querySelector('.o').value),cl=tr.querySelector('.cl').value,rate=num($('#r_'+tr.dataset.p).value);
-    const l=cl===''?0:num(cl)-o,a=l*rate;tr.querySelector('.l').textContent=l.toFixed(2);tr.querySelector('.a').textContent=a.toFixed(2);tot+=a;
+    const o=num(tr.querySelector('.o').value),cl=tr.querySelector('.cl').value,ts=num(tr.querySelector('.ts').value),rate=num($('#r_'+tr.dataset.p).value);
+    const l=cl===''?0:num(cl)-o-ts,a=l*rate;tr.querySelector('.l').textContent=l.toFixed(2);tr.querySelector('.a').textContent=a.toFixed(2);tot+=a;
   });
-  const cr=[...document.querySelectorAll('.ca')].reduce((s,e)=>s+num(e.value),0),exp=tot-cr-num($('#upi').value),sh=exp-num($('#cc').value);
-  window.T={tot,cr,exp,sh};
-  $('#sum').innerHTML=`Total sale <b>${inr(tot)}</b> | Credit <b>${inr(cr)}</b> | Expected cash <b>${inr(exp)}</b> | ${t('shortage')} <b class="${sh>0?'red':'grn'}">${inr(sh)}</b>`;
+  const sx=s=>[...document.querySelectorAll(s)].reduce((a,e)=>a+num(e.value),0),cr=sx('.ca'),ex=sx('.ea'),dg=num($('#pe').value)+num($('#upi').value)+num($('#hp').value),exp=tot-cr-dg-ex,sh=exp-num($('#cc').value);
+  window.T={tot,cr,ex,exp,sh};
+  $('#sum').innerHTML=`Total sale <b>${inr(tot)}</b> | Credit <b>${inr(cr)}</b> | PhonePe/UPI/HP card <b>${inr(dg)}</b> | Kharcha <b>${inr(ex)}</b> | Expected cash <b>${inr(exp)}</b> | ${t('shortage')} <b class="${sh>0?'red':'grn'}">${inr(sh)}</b>`;
 }
 async function saveShift(){
-  const date=$('#sd').value,shift=$('#ss').value,rows=[];
+  const date=$('#sd').value,shift=$('#ss').value,who=$('#cb').value,rows=[];
   for(const tr of document.querySelectorAll('tr[data-n]')){
     const cl=tr.querySelector('.cl').value;if(cl==='')continue;
-    const o=num(tr.querySelector('.o').value),c=num(cl);
-    if(c<o) return alert('Closing < opening: '+tr.dataset.n);
-    const rate=num($('#r_'+tr.dataset.p).value),l=c-o;
-    rows.push({date,shift,nozzle:tr.dataset.n,product:tr.dataset.p,opening:o,closing:c,ltr:l,rate,amount:l*rate});
+    const o=num(tr.querySelector('.o').value),c=num(cl),ts=num(tr.querySelector('.ts').value);
+    if(c<o+ts) return alert('Closing, opening+test se kam hai: '+tr.dataset.n);
+    const rate=num($('#r_'+tr.dataset.p).value),l=c-o-ts;
+    rows.push({date,shift,nozzle:tr.dataset.n,product:tr.dataset.p,opening:o,closing:c,test_ltr:ts,ltr:l,rate,amount:l*rate});
   }
   if(!rows.length) return alert('Enter closing readings');
+  if(rows.some(r=>r.rate<=0)&&!confirm('Kisi product ka rate 0 hai. Phir bhi save?'))return;
   const {data:dup}=await sb.from('shift_close').select('id').eq('date',date).eq('shift',shift);
   if(dup?.length&&!confirm('This shift is already saved. Save again?'))return;
   calc();let e=(await sb.from('readings').insert(rows)).error;
   const tx=[...document.querySelectorAll('.crl')].map(d=>({party_id:+d.querySelector('.cp').value,date,type:'credit',amount:num(d.querySelector('.ca').value),note:'Shift '+shift})).filter(x=>x.amount>0&&x.party_id);
   if(!e&&tx.length)e=(await sb.from('party_txn').insert(tx)).error;
-  if(!e)e=(await sb.from('shift_close').insert({date,shift,total_sale:T.tot,credit:T.cr,upi:num($('#upi').value),expected_cash:T.exp,cash_counted:num($('#cc').value),shortage:T.sh})).error;
+  const ex=[...document.querySelectorAll('.exl')].map(d=>({date,book:'cash',type:'out',category:d.querySelector('.ec').value,amount:num(d.querySelector('.ea').value),note:'Shift '+shift+(d.querySelector('.en').value?': '+d.querySelector('.en').value:''),by_name:who})).filter(x=>x.amount>0);
+  if(!e&&ex.length)e=(await sb.from('ledger_entries').insert(ex)).error;
+  if(!e)e=(await sb.from('shift_close').insert({date,shift,total_sale:T.tot,credit:T.cr,upi:num($('#upi').value),phonepe:num($('#pe').value),hpcard:num($('#hp').value),expense:T.ex,expected_cash:T.exp,cash_counted:num($('#cc').value),shortage:T.sh,closed_by:who})).error;
   e?alert(e.message):(alert('Saved'),go('dash'));
 }
 
@@ -155,14 +165,14 @@ function settingsPage(){
   const c=S.cfg;
   $('#main').innerHTML=`<div class=card><h3>${t('settings')}</h3><div class=row><label>Pump name<input id=s_name value="${esc(c.name)}"></label><label>Phones<input id=s_ph value="${esc(c.phones)}"></label></div>
   <div class=row><label>Address<input id=s_ad value="${esc(c.address)}"></label><label>GSTIN / VAT (later)<input id=s_gs value="${esc(c.gstin)}"></label></div>
-  <div class=row><label>MS rate<input type=number step=.01 id=s_ms value="${c.rates.MS}"></label><label>HSD rate<input type=number step=.01 id=s_hs value="${c.rates.HSD}"></label></div>
+  <div class=row><label>MS rate<input type=number step=.01 id=s_ms value="${c.rates.MS}"></label><label>HSD rate<input type=number step=.01 id=s_hs value="${c.rates.HSD}"></label><label>CNG rate/kg<input type=number step=.01 id=s_cg value="${c.rates.CNG||0}"></label></div>
   <label>Shifts (one per line)<textarea id=s_sh rows=3>${esc(c.shifts.join('\n'))}</textarea></label><br><br>
   <label>Nozzles (JSON: id, p=MS/HSD, n=display name)<textarea id=s_nz rows=8>${esc(JSON.stringify(c.nozzles,null,1))}</textarea></label><br><br>
   <button class=p onclick=saveSettings()>${t('save')}</button></div>`;
 }
 async function saveSettings(){
   let nz;try{nz=JSON.parse($('#s_nz').value)}catch(e){return alert('Nozzle JSON error')}
-  S.cfg={...S.cfg,name:$('#s_name').value,phones:$('#s_ph').value,address:$('#s_ad').value,gstin:$('#s_gs').value,rates:{MS:num($('#s_ms').value),HSD:num($('#s_hs').value)},shifts:$('#s_sh').value.split('\n').map(s=>s.trim()).filter(Boolean),nozzles:nz};
+  S.cfg={...S.cfg,name:$('#s_name').value,phones:$('#s_ph').value,address:$('#s_ad').value,gstin:$('#s_gs').value,rates:{MS:num($('#s_ms').value),HSD:num($('#s_hs').value),CNG:num($('#s_cg').value)},shifts:$('#s_sh').value.split('\n').map(s=>s.trim()).filter(Boolean),nozzles:nz};
   const {error}=await sb.from('pump_settings').upsert({id:1,data:S.cfg});
   error?alert(error.message):(alert('Saved'),shell(),go('settings'));
 }
