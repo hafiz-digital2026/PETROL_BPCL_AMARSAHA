@@ -99,3 +99,6 @@ Petrol/diesel par GST nahi lagta (VAT rate me shamil). GST sirf lubricant jaise 
 9. Employee bhi shift ka kharcha daal sakta hai (pehle database rok deta tha).
 
 **Offline note:** offline bhari shift sync hote waqt agar beech me Owner ne rate badla ho ya kisi aur device se shift bhar di ho, to entry reject hogi aur message aayega. Ek shift ek hi device se bharo.
+
+## Bhasha (Language)
+Poora software English mein hai. Upar (aur login page par) bhasha chuno: **English**, **English + বাংলা**, ya **English + हिंदी**. Har label, button aur message ke neeche doosri bhasha bhi dikhegi. Har phone/computer apni pasand yaad rakhta hai. Nayi file: `i18n.js` (isko bhi upload karna hai).

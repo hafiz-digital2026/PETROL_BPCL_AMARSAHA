@@ -4,6 +4,7 @@
 <link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0a3d91"><style>nav button{text-transform:capitalize;white-space:nowrap}</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="offline.js"></script>
+<script src="i18n.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--hp:#0a3d91;--hp2:#1565d8;--red:#e2231a;--bg:#eef3fb;--ink:#14213d;--mut:#5b6b88}
@@ -47,12 +48,12 @@ table{width:100%;border-collapse:collapse}th{background:#f1f5fc;color:var(--mut)
 const SB_URL='https://qvrusvuvmqkngtiztfsb.supabase.co', SB_KEY='sb_publishable_nrrHjpsqP46TQgaIxmfOoQ_R6uc2O6M';
 const sb=supabase.createClient(SB_URL,SB_KEY);
 const L={bn:{dashboard:'ড্যাশবোর্ড',shift:'শিফট ক্লোজিং',parties:'বাকি গ্রাহক',settings:'সেটিংস',today_sale:'আজকের বিক্রি',credit_due:'বকেয়া টাকা',cash:'নগদ',shortage:'ঘাটতি',save:'জমা করুন',logout:'লগআউট',backup:'ব্যাকআপ',opening:'ওপেনিং',closing:'ক্লোজিং',amount:'টাকা'}};
-const DEF={name:'AMAR SAHA HP PETROL PUMP',company:'HPCL',owner_wa:'',test_max:10,address:'Ranikamat, Chanchal, Malda, WB 732140',phones:'8945038075, 9475972794',gstin:'',
+const DEF={name:'Amar Saha HP Petrol Pump',company:'HPCL',owner_wa:'',test_max:10,address:'Ranikamat, Chanchal, Malda, WB 732140',phones:'8945038075, 9475972794',gstin:'',
  rates:{MS:0,HSD:0,CNG:0},shifts:['Morning (6AM-2PM)','Afternoon (2PM-10PM)','Night (10PM-6AM)'],
  nozzles:[{id:'MS1',p:'MS'},{id:'HSD1',p:'HSD'},{id:'MS1_2',p:'MS',n:'MS1 (M/C 2)'},{id:'HSD1_2',p:'HSD',n:'HSD1 (M/C 2)'},{id:'MS2_2',p:'MS',n:'MS2 (M/C 2)'},{id:'HSD2_2',p:'HSD',n:'HSD2 (M/C 2)'}]};
 let S={lang:localStorage.lang||'en',page:'dash',cfg:DEF,parties:[]};
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const t=k=>(S.lang=='bn'&&L.bn[k])||{dashboard:'Dashboard',shift:'Shift Closing',parties:'Credit Parties',settings:'Settings',today_sale:'Today Sale',credit_due:'Credit Due',cash:'Cash',shortage:'Shortage',save:'Save',logout:'Logout',backup:'Backup',opening:'Opening',closing:'Closing',amount:'Amount'}[k]||k;
+const t=k=>({dash:'Dashboard',stock:'Stock',books:'Cash & Bank Books',reports:'Reports',recon:'Bank Recon',lube:'Lubricant',staff:'Staff',dashboard:'Dashboard',shift:'Shift Closing',parties:'Credit Parties',settings:'Settings',today_sale:'Today Sale',credit_due:'Credit Due',cash:'Cash',shortage:'Shortage',save:'Save',logout:'Logout',backup:'Backup',opening:'Opening',closing:'Closing',amount:'Amount'})[k]||k;
 const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const inr=n=>'₹'+(+n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
 const num=v=>parseFloat(v)||0;
@@ -65,15 +66,15 @@ async function init(){
   S.cfg={...DEF,...(data?.data||{})}; shell(); go('dash');
 }
 function login(msg=''){
-  const F=[['⛽','Shift closing','Nozzle reading, test litre, auto opening'],['💳','PhonePe · UPI · HP Card','Cash milan, shortage turant'],['🔥','Petrol · Diesel · CNG','Litre aur kg dono'],['🛢️','Tank stock','Dip, tanker purchase, low alert'],
-   ['🧴','Lubricant','Stock, bikri, GST'],['👷','Staff haazri','Salary, advance, slip WhatsApp'],['🤝','Khata / udhaar','Party ledger, WhatsApp reminder'],['📒','Cash & bank book','Kharcha, bank recon'],
-   ['📈','Reports','P&L, Day book, CA pack, Tally XML'],['📲','DSR WhatsApp','Shift band, owner ko report'],['🔐','Owner · Manager · Staff','Har role ki alag pahunch'],['📴','Offline chalega','Net aate hi sync']];
+  const F=[['⛽','Shift closing','Nozzle reading, test litre, auto opening'],['💳','PhonePe · UPI · HP Card','Cash tally, instant shortage'],['🔥','Petrol · Diesel · CNG','Litres and kg'],['🛢️','Tank stock','Dip, tanker purchase, low alert'],
+   ['🧴','Lubricant','Stock, sales, GST'],['👷','Staff attendance','Salary, advance, WhatsApp slip'],['🤝','Credit ledger','Party ledger, WhatsApp reminder'],['📒','Cash & bank book','Expenses, bank recon'],
+   ['📈','Reports','P&L, Day book, CA pack, Tally XML'],['📲','DSR WhatsApp','Shift report to owner'],['🔐','Owner · Manager · Staff','Separate access for each role'],['📴','Works offline','Auto sync when online']];
   $('#app').innerHTML=`<div class=land><section class=hero><div><span class=logo style="width:48px;height:48px;font-size:16px">HP</span></div>
-  <h1>Smart Petrol Pump Software</h1><p class=tag>Shift, stock, khata, staff aur hisaab, sab ek jagah. Phone aur computer dono par.</p>
+  <h1>Smart Petrol Pump Software</h1><p class=tag>Shifts, stock, credit, staff and accounts in one place. Works on phone and computer.</p>
   <div class=feat>${F.map(f=>`<div><span>${f[0]}</span><b>${f[1]}</b><small>${f[2]}</small></div>`).join('')}</div>
-  <div class=dev><small>Software by</small><b>UltraAccounting</b><span>Petrol pump, dukaan aur business software · Chanchal, Malda</span>
-  <span>Apne pump ke liye software chahiye? Call / WhatsApp: <a href="tel:+917602292599">7602292599</a> · <a target=_blank href="https://wa.me/917602292599?text=${encodeURIComponent('Namaskar, mujhe petrol pump software ke baare me jaankari chahiye.')}">WhatsApp</a></span></div></section>
-  <section class=lcard><div class=card><h2>${esc(S.cfg.name)}</h2><p class=red>${esc(msg)}</p>
+  <div class=dev><small>Software by</small><b>UltraAccounting</b><span>Software for petrol pumps, shops and businesses · Chanchal, Malda</span>
+  <span>Need software for your pump? Call / WhatsApp: <a href="tel:+917602292599">7602292599</a> · <a target=_blank href="https://wa.me/917602292599?text=${encodeURIComponent('Hello, I would like details about the petrol pump software.')}">WhatsApp</a></span></div></section>
+  <section class=lcard><div class=card><div style="text-align:right">${L2SEL()}</div><h2>${esc(S.cfg.name)}</h2><p class=red>${esc(msg)}</p>
   <label>Email<input id=em type=email autocomplete=username></label><br><br><label>Password<input id=pw type=password autocomplete=current-password onkeydown="event.key=='Enter'&&doLogin()"></label><br><br>
   <button class=p style="width:100%;padding:12px" onclick="doLogin()">Login</button>
   <p style="text-align:center;font-size:13px;color:#5b6b88">Software support: <a href="tel:+917602292599">7602292599</a></p></div></section></div>`;
@@ -83,9 +84,9 @@ async function doLogin(){
   error?login(error.message):init();
 }
 function shell(){
-  $('#app').innerHTML=`<header><span><span class=logo>HP</span><b>${esc(S.cfg.name)}</b></span><span><button onclick="S.lang=S.lang=='en'?'bn':'en';localStorage.lang=S.lang;shell();go(S.page)">${S.lang=='en'?'বাংলা':'English'}</button>
+  $('#app').innerHTML=`<header><span><span class=logo>HP</span><b>${esc(S.cfg.name)}</b></span><span>${L2SEL()}
   <button onclick="backup()">${t('backup')}</button> <button onclick="sb.auth.signOut().then(init)">${t('logout')}</button></span></header>
-  <nav>${['dash','shift','stock','lube','staff','books','parties','reports','recon','settings'].map(p=>`<button id=n_${p} onclick="go('${p}')">${NI[p]||''} ${({recon:'Bank Recon',lube:'Lubricant',staff:'Staff'})[p]||t(p=='dash'?'dashboard':p)}</button>`).join('')}</nav><main id=main></main>`;
+  <nav>${['dash','shift','stock','lube','staff','books','parties','reports','recon','settings'].map(p=>`<button id=n_${p} onclick="go('${p}')">${NI[p]||''} ${t(p)}</button>`).join('')}</nav><main id=main></main>`;
 }
 function go(p){
   S.page=p; document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.id=='n_'+p));
@@ -107,9 +108,9 @@ async function dash(){
   <div class=card><span class=ic>⛽</span>Petrol (MS)<div class=big>${sum(td.filter(x=>x.product=='MS'),'ltr').toFixed(1)} L</div></div>
   <div class=card><span class=ic>🚚</span>Diesel (HSD)<div class=big>${sum(td.filter(x=>x.product=='HSD'),'ltr').toFixed(1)} L</div></div>
   ${S.cfg.nozzles.some(n=>n.p=='CNG')?`<div class=card><span class=ic>🔥</span>CNG<div class=big>${sum(td.filter(x=>x.product=='CNG'),'ltr').toFixed(1)} kg</div></div>`:''}
-  <div class=card><span class=ic>🧪</span>Aaj test (L)<div class=big>${sum(td,'test_ltr').toFixed(1)} L</div><small>wapas tank me</small></div>
+  <div class=card><span class=ic>🧪</span>Today's test (L)<div class=big>${sum(td,'test_ltr').toFixed(1)} L</div><small>returned to tank</small></div>
   <div class=card><span class=ic>📕</span>${t('credit_due')}<div class="big red">${inr(due)}</div></div></div>
-  <div class=card><b>Aaj ki report (DSR)</b> &nbsp;<button class=wa onclick="dayDSR()">📲 WhatsApp pe bhejo</button> <small>sab shift ka total owner ko</small></div>
+  <div class=card><b>Today's report (DSR)</b> &nbsp;<button class=wa onclick="dayDSR()">📲 Send on WhatsApp</button> <small>all shifts total to owner</small></div>
   <div class=card><b>Last 7 days</b>${Object.keys(days).sort().map(k=>`<div>${k} ${inr(days[k])}<div class=bar style="width:${days[k]/mx*100}%"></div></div>`).join('')||'<p>No data yet</p>'}</div>
   <div class="card tw"><b>Recent shifts</b><table><tr><th>Date</th><th>Shift</th><th>Sale</th><th>Credit</th><th>PhonePe</th><th>UPI</th><th>HP Card</th><th>${t('cash')}</th><th>${t('shortage')}</th><th>By</th></tr>
   ${(sc||[]).map(x=>`<tr><td>${x.date}</td><td>${esc(x.shift)}</td><td>${inr(x.total_sale)}</td><td>${inr(x.credit)}</td><td>${inr(x.phonepe)}</td><td>${inr(x.upi)}</td><td>${inr(x.hpcard)}</td><td>${inr(x.cash_counted)}</td><td class="${x.shortage>0?'red':'grn'}">${inr(x.shortage)}</td><td>${esc(x.closed_by)}</td>${S.me?.role=='owner'?`<td><button title="Delete shift" onclick="dShift(${x.id})">🗑</button></td>`:''}</tr>`).join('')}</table></div>`;
@@ -130,10 +131,10 @@ async function shiftPage(){
   <div class=tw><table><tr><th>Nozzle</th><th>${t('opening')}</th><th>${t('closing')}</th><th>Test (L)</th><th>Litre</th><th>${t('amount')}</th></tr>
   ${c.nozzles.map(n=>`<tr data-n="${n.id}" data-p="${n.p}"><td>${esc(n.n||n.id)}</td><td><input type=number step=.01 class=o value="${last[n.id]??0}" ${(n.id in last)&&!own?'readonly style="background:#eef"':''} oninput=calc()></td>
   <td><input type=number step=.01 class=cl oninput=calc()></td><td><input type=number step=.01 min=0 max=${c.test_max||10} class=ts value=0 oninput=calc()></td><td class=l>0</td><td class=a>0</td></tr>`).join('')}</table></div>
-  <small>Opening pichli closing se apne aap aati hai (sirf Owner badal sakta hai). Test = subah pump chalu karte waqt nikala hua tel (wapas tank me daala), sale me nahi judta. Test zyada se zyada ${c.test_max||10} L/nozzle. Rate sirf Owner Settings se badalta hai.</small></div>
-  <div class=card><b>🧴 Lubricant / mobil bikri (is shift me)</b><div id=lu></div><button onclick=addLu()>+ Lube line</button></div>
-  <div class=card><b>${t('credit_due')} (Credit sales)</b><div id=cr></div><button onclick=addCr()>+ Credit line</button></div>
-  <div class=card><b>Kharcha (cash se diya: gift, chai, repair etc.)</b><div id=ex></div><button onclick=addEx()>+ Expense line</button></div>
+  <small>Opening comes automatically from the last closing (only Owner can change it). Test = fuel drawn to test the pump (poured back into tank), not counted in sale. Max test ${c.test_max||10} L per nozzle. Only Owner can change rates in Settings.</small></div>
+  <div class=card><b>🧴 Lubricant / mobil oil sale (this shift)</b><div id=lu></div><button onclick=addLu()>+ Lube line</button></div>
+  <div class=card><b>Credit sales</b><div id=cr></div><button onclick=addCr()>+ Credit line</button></div>
+  <div class=card><b>Expenses (paid from cash: gift, tea, repair etc.)</b><div id=ex></div><button onclick=addEx()>+ Expense line</button></div>
   <div class=card><div class=row><label>PhonePe<input type=number id=pe oninput=calc()></label><label>UPI / other<input type=number id=upi oninput=calc()></label><label>HP Card<input type=number id=hp oninput=calc()></label><label>${t('cash')} counted<input type=number id=cc oninput=calc()></label></div>
   <div id=sum></div><br><button class=p onclick=saveShift()>${t('save')}</button></div>`;
   calc();
@@ -142,7 +143,7 @@ function addCr(){
   $('#cr').insertAdjacentHTML('beforeend',`<div class="row crl"><label>Party<select class=cp>${S.parties.map(p=>`<option value=${p.id}>${esc(p.name)}</option>`).join('')}</select></label><label>${t('amount')}<input type=number class=ca oninput=calc()></label></div>`);
 }
 function addEx(){
-  $('#ex').insertAdjacentHTML('beforeend',`<div class="row exl"><label>Type<select class=ec>${EXP.map(c=>`<option>${c}</option>`).join('')}</select></label><label>${t('amount')}<input type=number class=ea oninput=calc()></label><label>Kisko / kya<input class=en></label></div>`);
+  $('#ex').insertAdjacentHTML('beforeend',`<div class="row exl"><label>Type<select class=ec>${EXP.map(c=>`<option>${c}</option>`).join('')}</select></label><label>${t('amount')}<input type=number class=ea oninput=calc()></label><label>Paid to / for<input class=en></label></div>`);
 }
 function calc(){
   let tot=0;
@@ -153,20 +154,20 @@ function calc(){
   const lu=[...document.querySelectorAll('.lul')].reduce((a,d)=>{const it=S.lubes.find(x=>x.id==d.querySelector('.lp').value);return a+num(d.querySelector('.lq').value)*num(it?.price)},0);tot+=lu;
   const sx=s=>[...document.querySelectorAll(s)].reduce((a,e)=>a+num(e.value),0),cr=sx('.ca'),ex=sx('.ea'),dg=num($('#pe').value)+num($('#upi').value)+num($('#hp').value),exp=tot-cr-dg-ex,sh=exp-num($('#cc').value);
   window.T={tot,cr,ex,exp,sh,lu,dg};
-  $('#sum').innerHTML=`<div class=sum><div>Total sale<b>${inr(tot)}</b></div><div>Lube<b>${inr(lu)}</b></div><div>Credit<b>${inr(cr)}</b></div><div>PhonePe/UPI/HP card<b>${inr(dg)}</b></div><div>Kharcha<b>${inr(ex)}</b></div><div>Expected cash<b>${inr(exp)}</b></div><div>${t('shortage')}<b class="${sh>0?'red':'grn'}">${inr(sh)}</b></div></div>`;
+  $('#sum').innerHTML=`<div class=sum><div>Total sale<b>${inr(tot)}</b></div><div>Lube<b>${inr(lu)}</b></div><div>Credit<b>${inr(cr)}</b></div><div>PhonePe/UPI/HP card<b>${inr(dg)}</b></div><div>Expenses<b>${inr(ex)}</b></div><div>Expected cash<b>${inr(exp)}</b></div><div>${t('shortage')}<b class="${sh>0?'red':'grn'}">${inr(sh)}</b></div></div>`;
 }
 async function saveShift(){
   const date=$('#sd').value,shift=$('#ss').value,who=$('#cb').value,rows=[];
   for(const tr of document.querySelectorAll('tr[data-n]')){
     const cl=tr.querySelector('.cl').value;if(cl==='')continue;
     const o=num(tr.querySelector('.o').value),c=num(cl),ts=num(tr.querySelector('.ts').value);
-    if(c<o+ts) return alert('Closing, opening+test se kam hai: '+tr.dataset.n);
-    if(ts<0||(S.me?.role!='owner'&&ts>(S.cfg.test_max||10))) return alert('Test litre '+(S.cfg.test_max||10)+' se zyada nahi: '+tr.dataset.n);
+    if(c<o+ts) return alert('Closing is less than opening + test: '+tr.dataset.n);
+    if(ts<0||(S.me?.role!='owner'&&ts>(S.cfg.test_max||10))) return alert('Test litres cannot exceed '+(S.cfg.test_max||10)+' L: '+tr.dataset.n);
     const rate=num($('#r_'+tr.dataset.p).value),l=c-o-ts;
     rows.push({date,shift,nozzle:tr.dataset.n,product:tr.dataset.p,opening:o,closing:c,test_ltr:ts,ltr:l,rate,amount:l*rate});
   }
   if(!rows.length) return alert('Enter closing readings');
-  if(rows.some(r=>r.rate<=0)&&!confirm('Kisi product ka rate 0 hai. Phir bhi save?'))return;
+  if(rows.some(r=>r.rate<=0)&&!confirm('A product rate is 0. Save anyway?'))return;
   const {data:dup}=await sb.from('shift_close').select('id').eq('date',date).eq('shift',shift);
   if(dup?.length&&!confirm('This shift is already saved. Save again?'))return;
   calc();let e=(await sb.from('readings').insert(rows)).error;
@@ -207,10 +208,10 @@ function settingsPage(){
   const c=S.cfg;
   $('#main').innerHTML=`<div class=card><h3>${t('settings')}</h3><div class=row><label>Pump name<input id=s_name value="${esc(c.name)}"></label><label>Phones<input id=s_ph value="${esc(c.phones)}"></label></div>
   <div class=row><label>Address<input id=s_ad value="${esc(c.address)}"></label><label>GSTIN / VAT (later)<input id=s_gs value="${esc(c.gstin)}"></label></div>
-  <div class=row><label>Oil company<input id=s_co value="${esc(c.company||'HPCL')}"></label><label>Owner WhatsApp (report ke liye)<input id=s_wa value="${esc(c.owner_wa||'')}" placeholder="10 digit"></label><label>Test max (L/nozzle)<input type=number id=s_tm value="${c.test_max||10}"></label></div>
+  <div class=row><label>Oil company<input id=s_co value="${esc(c.company||'HPCL')}"></label><label>Owner WhatsApp (for reports)<input id=s_wa value="${esc(c.owner_wa||'')}" placeholder="10 digit"></label><label>Test max (L/nozzle)<input type=number id=s_tm value="${c.test_max||10}"></label></div>
   <div class=row><label>MS rate<input type=number step=.01 id=s_ms value="${c.rates.MS}"></label><label>HSD rate<input type=number step=.01 id=s_hs value="${c.rates.HSD}"></label><label>CNG rate/kg<input type=number step=.01 id=s_cg value="${c.rates.CNG||0}"></label></div>
   <label>Shifts (one per line)<textarea id=s_sh rows=3>${esc(c.shifts.join('\n'))}</textarea></label><br><br>
-  <label>Nozzles (JSON: id, p=MS/HSD, n=display name)<textarea id=s_nz rows=8>${esc(JSON.stringify(c.nozzles,null,1))}</textarea></label><br><br>
+  <label>Nozzles (JSON: id, p=MS/HSD/CNG, n=display name)<textarea id=s_nz rows=8>${esc(JSON.stringify(c.nozzles,null,1))}</textarea></label><br><br>
   <button class=p onclick=saveSettings()>${t('save')}</button></div>`;
 }
 async function saveSettings(){

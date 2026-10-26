@@ -1,4 +1,4 @@
-const C='pump-v5',A=['./','index.html','offline.js','phase2.js','phase3.js','phase5.js','manifest.webmanifest'];
+const C='pump-v6',A=['./','index.html','offline.js','phase2.js','phase3.js','phase5.js','i18n.js','manifest.webmanifest'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(A))));
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);

@@ -8,7 +8,7 @@ const jp=(k,d)=>{try{return JSON.parse(LS[k]||d)}catch{return JSON.parse(d)}};
 const queue=()=>jp(Q,'[]'),save=q=>{LS[Q]=JSON.stringify(q);badge()};
 const stored=()=>{const k=Object.keys(LS).find(k=>/^sb-.*-auth-token$/.test(k));try{return JSON.parse(LS[k])}catch{return null}};
 const isNet=e=>e instanceof TypeError,tb=u=>(u.match(/\/rest\/v1\/([a-z_]+)/)||[])[1];
-const NEEDNET=J({message:'Is kaam ke liye internet chahiye (offline me sirf shift/stock/book/purchase entry hoti hai)'},503);
+const NEEDNET=J({message:'Internet needed for this (offline, only shift/stock/book/purchase entries work)'},503);
 
 window.fetch=async(input,init={})=>{
  const url=typeof input=='string'?input:input.url,m=(init.method||'GET').toUpperCase(),rest=url.includes('/rest/v1/'),au=url.includes('/auth/v1/');
@@ -23,7 +23,7 @@ window.fetch=async(input,init={})=>{
  const hd=Object.fromEntries(new Headers(init.headers||{})),key='gc:'+url+'|'+(hd.accept||'');
  if(m=='GET'){
   if(!off)try{const r=await OF(input,init);if(r.ok){const t=await r.clone().text();try{LS[key]=t}catch{}}return r}catch(e){if(!isNet(e))throw e}
-  const c=LS[key];return c!=null?J(c):J({message:'Offline: ye data abhi cache me nahi hai'},503)}
+  const c=LS[key];return c!=null?J(c):J({message:'Offline: this data is not cached yet'},503)}
  const T=tb(url);
  if(!off)try{return await OF(input,init)}catch(e){if(!isNet(e))throw e}
  if(m!='POST'||!OKT.includes(T)||typeof init.body!='string')return NEEDNET.clone();
@@ -45,8 +45,8 @@ async function sync(){
    if(!r.ok)bad.push(it.tb+': '+(await r.text()).slice(0,120)+' | '+it.body.slice(0,100));else n++;
    save(q.slice(1))}
  }finally{window._sy=0}
- if(bad.length){LS[BADK]=JSON.stringify([...jp(BADK,'[]'),...bad]);alert('Sync me '+bad.length+' entry reject hui:\n'+bad.slice(0,3).join('\n'))}
- if(n)alert(n+' offline entry sync ho gayi ✓');
+ if(bad.length){LS[BADK]=JSON.stringify([...jp(BADK,'[]'),...bad]);alert('Sync: '+bad.length+' entries rejected:\n'+bad.slice(0,3).join('\n'))}
+ if(n)alert(n+' offline entries synced ✓');
  badge();if(n&&typeof S!='undefined'&&S.page=='dash')go('dash')}
 
 function badge(){
