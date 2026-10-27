@@ -158,6 +158,7 @@ function calc(){
 }
 async function saveShift(){
   const date=$('#sd').value,shift=$('#ss').value,who=$('#cb').value,rows=[];
+  if(S.me?.role=='owner'){const nr={...S.cfg.rates};let ch=0;prods().forEach(p=>{const v=num($('#r_'+p)?.value);if(v&&v!=nr[p]){nr[p]=v;ch=1}});if(ch){S.cfg={...S.cfg,rates:nr};const{error}=await sb.from('pump_settings').upsert({id:1,data:S.cfg});if(error)return alert(error.message)}}
   for(const tr of document.querySelectorAll('tr[data-n]')){
     const cl=tr.querySelector('.cl').value;if(cl==='')continue;
     const o=num(tr.querySelector('.o').value),c=num(cl),ts=num(tr.querySelector('.ts').value);
