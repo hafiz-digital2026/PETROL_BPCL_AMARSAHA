@@ -130,7 +130,7 @@ async function shiftPage(){
   ${prods().map(p=>`<label>${p} rate<input type=number step=.01 id=r_${p} value="${c.rates[p]||0}" ${own?'':'readonly'} oninput=calc()></label>`).join('')}
   <label>Closed by<input id=cb value="${esc(who)}" readonly></label></div>
   <div class=tw><table><tr><th>Nozzle</th><th>${t('opening')}</th><th>${t('closing')}</th><th>Test (L)</th><th>Litre</th><th>${t('amount')}</th></tr>
-  ${c.nozzles.map(n=>`<tr data-n="${n.id}" data-p="${n.p}"><td>${esc(n.n||n.id)}</td><td><input type=number step=.01 class=o value="${last[n.id]??0}" ${(n.id in last)&&!own?'readonly style="background:#eef"':''} oninput=calc()></td>
+  ${c.nozzles.map(n=>`<tr data-n="${n.id}" data-p="${n.p}" data-new="${n.id in last?0:1}"><td>${esc(n.n||n.id)}</td><td><input type=number step=.01 class=o value="${last[n.id]??0}" ${!own?'readonly style="background:#eef"':''} oninput=calc()>${!(n.id in last)&&!own?'<br><small class=red>Owner sets first opening</small>':''}</td>
   <td><input type=number step=.01 class=cl oninput=calc()></td><td><input type=number step=.01 min=0 max=${c.test_max||10} class=ts value=0 oninput=calc()></td><td class=l>0</td><td class=a>0</td></tr>`).join('')}</table></div>
   <small>Opening comes automatically from the last closing (only Owner can change it). Test = fuel drawn to test the pump (poured back into tank), not counted in sale. Max test ${c.test_max||10} L per nozzle. Only Owner can change rates in Settings.</small></div>
   <div class=card><b>🧴 Lubricant / mobil oil sale (this shift)</b><div id=lu></div><button onclick=addLu()>+ Lube line</button></div>
@@ -161,7 +161,7 @@ async function saveShift(){
   const date=$('#sd').value,shift=$('#ss').value,who=$('#cb').value,rows=[];
   if(S.me?.role=='owner'){const nr={...S.cfg.rates};let ch=0;prods().forEach(p=>{const v=num($('#r_'+p)?.value);if(v&&v!=nr[p]){nr[p]=v;ch=1}});if(ch){S.cfg={...S.cfg,rates:nr};const{error}=await sb.from('pump_settings').upsert({id:1,data:S.cfg});if(error)return alert(error.message)}}
   for(const tr of document.querySelectorAll('tr[data-n]')){
-    const cl=tr.querySelector('.cl').value;if(cl==='')continue;
+    const cl=tr.querySelector('.cl').value;if(cl==='')continue;if(S.me?.role!='owner'&&tr.dataset.new=='1')return alert('First opening of '+tr.dataset.n+' must be entered by the Owner.');
     const o=num(tr.querySelector('.o').value),c=num(cl),ts=num(tr.querySelector('.ts').value);
     if(c<o+ts) return alert('Closing is less than opening + test: '+tr.dataset.n);
     if(ts<0||(S.me?.role!='owner'&&ts>(S.cfg.test_max||10))) return alert('Test litres cannot exceed '+(S.cfg.test_max||10)+' L: '+tr.dataset.n);
