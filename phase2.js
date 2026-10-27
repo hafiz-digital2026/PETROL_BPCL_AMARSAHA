@@ -33,6 +33,18 @@ async function backupXlsx(){
  XLSX.writeFile(wb,'pump-data-'+today()+'.xlsx')}
 const ob=backup;backup=async()=>{await ob();await backupXlsx();localStorage.lb=today()};
 
+// v6.3: book stock per product (latest dip + purchases after it - sales after it)
+async function bookStocks(){
+ const CG=S.cfg.nozzles.some(n=>n.p=='CNG'),TK=TK0.concat(CG?[['CNG','CNG']]:[]),PR=['MS','HSD'].concat(CG?['CNG']:[]);
+ const dp=await q('dips',r=>r.order('date',{ascending:false}).order('id',{ascending:false}).limit(100)),lt={};
+ dp.forEach(d=>{if(!(d.tank in lt))lt[d.tank]=d});
+ const d0=Object.values(lt).map(x=>x.date).sort()[0]||today();
+ const[rd,pu]=await Promise.all([q('readings',r=>r.gte('date',d0)),q('purchases',r=>r.gte('date',d0))]),o={};
+ PR.forEach(p=>{const tk=TK.filter(x=>x[1]==p&&lt[x[0]]);if(!tk.length){o[p]=null;return}
+  const E=tk.map(x=>lt[x[0]].created_at||'9').sort().pop();
+  o[p]=sm(tk.map(x=>lt[x[0]]),'litres')+sm(pu.filter(x=>x.product==p&&(x.created_at||'9')>E),'ltr')-sm(rd.filter(x=>x.product==p&&(x.created_at||'9')>E),'ltr')});
+ return{PR,o};
+}
 async function stock(){
  const CG=S.cfg.nozzles.some(n=>n.p=='CNG'),TK=TK0.concat(CG?[['CNG','CNG']]:[]),PR=['MS','HSD'].concat(CG?['CNG']:[]),U=p=>p=='CNG'?'kg':'L';
  const dp=await q('dips',r=>r.order('date',{ascending:false}).order('id',{ascending:false}).limit(100)),lt={};
@@ -63,12 +75,23 @@ async function books(){
 async function reports(){
  const f=S.rf||(S.rf=[today().slice(0,8)+'01',today()]),w=r=>r.gte('date',f[0]).lte('date',f[1]);
  const[rd,pu,le,ps,tx,all,scs,lt]=await Promise.all([q('readings',w),q('purchases',w),q('ledger_entries',w),q('parties'),q('party_txn'),q('ledger_entries'),q('shift_close'),q('lube_txn',w).catch(()=>[])]);
- const ls=sm(lt.filter(x=>x.type=='sale'),'amount'),lp=sm(lt.filter(x=>x.type=='purchase'),'amount'),sale=sm(rd,'amount')+ls,pur=sm(pu,'amount')+lp,ex=sm(le.filter(x=>x.type=='out'&&EXP.includes(x.category)),'amount'),
+ const[puA,ltA,BS]=await Promise.all([q('purchases',r=>r.lte('date',f[1])),q('lube_txn',r=>r.lte('date',f[1])).catch(()=>[]),bookStocks()]);
+ // v6.3: profit = sale - cost of what was SOLD (litres sold x average purchase rate), not sale - all purchases
+ const U=p=>p=='CNG'?'kg':'L',AV={};BS.PR.forEach(p=>{const a=puA.filter(x=>x.product==p),qn=sm(a,'ltr');AV[p]=qn>0?sm(a,'amount')/qn:null});
+ const PP=BS.PR.map(p=>{const r=rd.filter(x=>x.product==p),qn=sm(r,'ltr'),sa=sm(r,'amount'),c=AV[p]==null?null:qn*AV[p];return{p,qn,sa,av:AV[p],c,pr:c==null?null:sa-c}});
+ const LA={};ltA.filter(x=>x.type=='purchase').forEach(x=>{const o=LA[x.item_id]||(LA[x.item_id]={q:0,a:0});o.q+=num(x.qty);o.a+=num(x.amount)});
+ const lsl=lt.filter(x=>x.type=='sale'),lc=lsl.reduce((s,x)=>{const o=LA[x.item_id];return s+(o&&o.q>0?num(x.qty)*o.a/o.q:0)},0),lnc=lsl.some(x=>!(LA[x.item_id]?.q>0));
+ const fc=PP.reduce((s,x)=>s+(x.c||0),0),miss=PP.filter(x=>x.qn>0&&x.c==null).map(x=>x.p).concat(lnc?['Lube']:[]),cogs=fc+lc;
+ const RT=S.cfg.rates||{},RS=BS.PR.map(p=>{const st=BS.o[p],rt=num(RT[p]);return{p,st,av:AV[p],val:st!=null&&AV[p]!=null?st*AV[p]:null,rt,ep:st!=null&&AV[p]!=null&&rt?st*(rt-AV[p]):null}});
+ const ls=sm(lsl,'amount'),lp=sm(lt.filter(x=>x.type=='purchase'),'amount'),sale=sm(rd,'amount')+ls,pur=sm(pu,'amount')+lp,ex=sm(le.filter(x=>x.type=='out'&&EXP.includes(x.category)),'amount'),
  bal=b=>all.filter(x=>x.book==b).reduce((s,x)=>s+(x.type=='in'?1:-1)*num(x.amount),0)+(b=='cash'?shiftCash(scs):0),due={};
  tx.forEach(x=>due[x.party_id]=(due[x.party_id]||0)+(x.type=='credit'?1:-1)*num(x.amount));
  const po=ps.map(p=>[p.name,p.phone||'',due[p.id]||0]);window.RP={rd,pu,le,po};
  M(`<div class=card><div class=row><label>From<input type=date id=rf value=${f[0]}></label><label>To<input type=date id=rt value=${f[1]}></label></div><button class=p onclick="S.rf=[$('#rf').value,$('#rt').value];reports()">Show</button></div>
- <div class="card tw"><h3>Profit & Loss</h3><table><tr><td>Sales (fuel ${inr(sale-ls)} + lube ${inr(ls)})</td><td>${inr(sale)}</td></tr><tr><td>Purchases (fuel ${inr(pur-lp)} + lube ${inr(lp)})</td><td>${inr(pur)}</td></tr><tr><td><b>Gross profit</b></td><td><b>${inr(sale-pur)}</b></td></tr><tr><td>Expenses (salary, rent, etc.)</td><td>${inr(ex)}</td></tr><tr><td><b>Net profit</b></td><td><b class="${sale-pur-ex<0?'red':'grn'}">${inr(sale-pur-ex)}</b></td></tr></table>
+ <div class="card tw"><h3>Profit & Loss</h3><table><tr><td>Sales (fuel ${inr(sale-ls)} + lube ${inr(ls)})</td><td>${inr(sale)}</td></tr><tr><td>Cost of goods sold (fuel ${inr(fc)} + lube ${inr(lc)})<br><small>litres/kg sold × average purchase rate</small></td><td>${inr(cogs)}</td></tr><tr><td><b>Gross profit</b></td><td><b>${inr(sale-cogs)}</b></td></tr><tr><td>Expenses (salary, rent, etc.)</td><td>${inr(ex)}</td></tr><tr><td><b>Net profit</b></td><td><b class="${sale-cogs-ex<0?'red':'grn'}">${inr(sale-cogs-ex)}</b></td></tr><tr><td><small>Purchases this period (bought, not all sold): fuel ${inr(pur-lp)} + lube ${inr(lp)}</small></td><td><small>${inr(pur)}</small></td></tr></table>
+ ${miss.length?`<p class=red>⚠ No purchase rate yet for ${miss.join(', ')}. Enter a tanker/lube purchase so its cost can be counted; until then its cost is taken as ₹0.</p>`:''}
+ <h3>Product-wise profit</h3><table><tr><th>Product</th><th>Sold</th><th>Sale</th><th>Avg buy rate</th><th>Cost</th><th>Profit</th><th>Per L/kg</th></tr>${PP.map(x=>`<tr><td>${x.p}</td><td>${x.qn.toFixed(2)} ${U(x.p)}</td><td>${inr(x.sa)}</td><td>${x.av==null?'—':'₹'+x.av.toFixed(2)}</td><td>${x.c==null?'—':inr(x.c)}</td><td class="${(x.pr||0)<0?'red':'grn'}">${x.pr==null?'—':inr(x.pr)}</td><td>${x.pr==null||!x.qn?'—':'₹'+(x.pr/x.qn).toFixed(2)}</td></tr>`).join('')}<tr><td>Lube</td><td></td><td>${inr(ls)}</td><td></td><td>${inr(lc)}</td><td class="${ls-lc<0?'red':'grn'}">${inr(ls-lc)}</td><td></td></tr></table>
+ <h3>Stock in hand (not yet sold)</h3><table><tr><th>Product</th><th>Book stock</th><th>Bought value</th><th>Today's rate</th><th>Profit if sold at today's rate</th></tr>${RS.map(x=>`<tr><td>${x.p}</td><td>${x.st==null?'— (enter dip)':x.st.toFixed(0)+' '+U(x.p)}</td><td>${x.val==null?'—':inr(x.val)}</td><td>${x.rt?'₹'+x.rt:'—'}</td><td class="${(x.ep||0)<0?'red':'grn'}">${x.ep==null?'—':inr(x.ep)}</td></tr>`).join('')}</table>
  <h3>Balances (trial summary)</h3><table><tr><td>Cash book</td><td>${inr(bal('cash'))}</td></tr><tr><td>Bank book</td><td>${inr(bal('bank'))}</td></tr><tr><td>HP card (due from company)</td><td>${inr(sm(scs,'hpcard')-all.filter(x=>x.category=='HP card settlement'&&x.type=='in').reduce((a,x)=>a+num(x.amount),0))}</td></tr><tr><td>Debtors (party due)</td><td>${inr(po.reduce((s,x)=>s+x[2],0))}</td></tr></table></div>
  <div class=card><h3>CA Pack</h3><button onclick="csv('daybook',dayBook())">Day book (Excel/CSV)</button> <button onclick="csv('party-outstanding',[['Party','Phone','Due'],...RP.po])">Party outstanding</button> <button onclick="tally()">Tally XML</button></div>
  <div class="card tw"><h3>Party outstanding</h3><table>${po.filter(x=>x[2]>0).map(x=>`<tr><td>${esc(x[0])}</td><td>${inr(x[2])}</td><td><a target=_blank href="https://wa.me/91${String(x[1]).replace(/\D/g,'').slice(-10)}?text=${encodeURIComponent('Namaskar '+x[0]+', '+S.cfg.name+' me aapka '+x[2].toFixed(0)+' taka baki hai. Kripya jama kar dein.')}">WhatsApp</a></td></tr>`).join('')}</table></div>`);
