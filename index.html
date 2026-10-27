@@ -95,16 +95,17 @@ function go(p){
 
 async function dash(){
   const d7=new Date(Date.now()-6*864e5).toISOString().slice(0,10);
-  const [{data:r},{data:tx},{data:sc}]=await Promise.all([
+  const [{data:r},{data:tx},{data:sc},{data:lt}]=await Promise.all([
     sb.from('readings').select('date,product,ltr,amount,test_ltr').gte('date',d7),
     pg('party_txn','type,amount'),
-    sb.from('shift_close').select('*').order('id',{ascending:false}).limit(8)]);
+    sb.from('shift_close').select('*').order('id',{ascending:false}).limit(8),
+    sb.from('lube_txn').select('date,amount').eq('type','sale').gte('date',d7)]);
   const td=(r||[]).filter(x=>x.date==today()),sum=(a,k)=>a.reduce((s,x)=>s+num(x[k]),0);
   const due=(tx||[]).reduce((s,x)=>s+(x.type=='credit'?1:-1)*num(x.amount),0);
-  const days={};(r||[]).forEach(x=>days[x.date]=(days[x.date]||0)+num(x.amount));
+  const days={};(r||[]).forEach(x=>days[x.date]=(days[x.date]||0)+num(x.amount));(lt||[]).forEach(x=>days[x.date]=(days[x.date]||0)+num(x.amount));const tdl=sum((lt||[]).filter(x=>x.date==today()),'amount');
   const mx=Math.max(1,...Object.values(days));
   $('#main').innerHTML=`<div class=g>
-  <div class=card><span class=ic>💰</span>${t('today_sale')}<div class=big>${inr(sum(td,'amount'))}</div></div>
+  <div class=card><span class=ic>💰</span>${t('today_sale')}<div class=big>${inr(sum(td,'amount')+tdl)}</div>${tdl?`<small>incl. lube ${inr(tdl)}</small>`:''}</div>
   <div class=card><span class=ic>⛽</span>Petrol (MS)<div class=big>${sum(td.filter(x=>x.product=='MS'),'ltr').toFixed(1)} L</div></div>
   <div class=card><span class=ic>🚚</span>Diesel (HSD)<div class=big>${sum(td.filter(x=>x.product=='HSD'),'ltr').toFixed(1)} L</div></div>
   ${S.cfg.nozzles.some(n=>n.p=='CNG')?`<div class=card><span class=ic>🔥</span>CNG<div class=big>${sum(td.filter(x=>x.product=='CNG'),'ltr').toFixed(1)} kg</div></div>`:''}

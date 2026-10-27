@@ -50,9 +50,11 @@ async function stock(){
  <div class="card tw"><b>Recent dips</b><table><tr><th>Date</th><th>Tank</th><th>Litres</th><th>Density</th></tr>${dp.slice(0,10).map(x=>`<tr><td>${x.date}</td><td>${x.tank}</td><td>${x.litres}</td><td>${x.density??''}</td>${del('dips',x.id)}</tr>`).join('')}</table></div>`);
 }
 
+// v6.2: shift cash (cash counted + shift expenses already posted as cash-out) is added to the Cash book
+const shiftCash=scs=>(scs||[]).reduce((s,x)=>s+num(x.cash_counted)+num(x.expense),0);
 async function books(){
- const all=await q('ledger_entries',r=>r.order('date',{ascending:false}).order('id',{ascending:false})),bal=b=>all.filter(x=>x.book==b).reduce((s,x)=>s+(x.type=='in'?1:-1)*num(x.amount),0);
- M(`<div class=g><div class=card>Cash book<div class=big>${inr(bal('cash'))}</div></div><div class=card>Bank book<div class=big>${inr(bal('bank'))}</div></div></div>
+ const[all,scs]=await Promise.all([q('ledger_entries',r=>r.order('date',{ascending:false}).order('id',{ascending:false})),q('shift_close')]),sc=shiftCash(scs),bal=b=>all.filter(x=>x.book==b).reduce((s,x)=>s+(x.type=='in'?1:-1)*num(x.amount),0)+(b=='cash'?sc:0);
+ M(`<div class=g><div class=card>Cash book<div class=big>${inr(bal('cash'))}</div><small>incl. shift cash ${inr(sc)}</small></div><div class=card>Bank book<div class=big>${inr(bal('bank'))}</div></div></div>
  <div class=card><h3>New entry (cash/bank/expense/salary)</h3><div class=row><label>Date<input type=date id=ld value="${today()}"></label><label>Book<select id=lb><option value=cash>Cash</option><option value=bank>Bank</option></select></label><label>In/Out<select id=lt><option value=in>In (received)</option><option value=out>Out (paid)</option></select></label><label>Category<select id=lc>${CAT.map(c=>`<option>${c}</option>`).join('')}</select></label><label>Amount<input type=number id=la></label><label>Note<input id=ln></label></div>
  <button class=p onclick="num($('#la').value)>0?ins('ledger_entries',{date:$('#ld').value,book:$('#lb').value,type:$('#lt').value,category:$('#lc').value,amount:num($('#la').value),note:$('#ln').value,by_name:S.me?.name||S.me?.email||''},books):alert('Amount?')">Save</button></div>
  <div class="card tw"><table><tr><th>Date</th><th>Book</th><th>In/Out</th><th>Category</th><th>Amount</th><th>Note</th><th>By</th><th>Recon</th></tr>${all.slice(0,80).map(x=>`<tr><td>${x.date}</td><td>${x.book}</td><td>${x.type}</td><td>${esc(x.category)}</td><td>${inr(x.amount)}</td><td>${esc(x.note)}</td><td>${esc(x.by_name)}</td><td>${x.recon?'✓':''}</td>${del('ledger_entries',x.id)}</tr>`).join('')}</table></div>`);
@@ -62,7 +64,7 @@ async function reports(){
  const f=S.rf||(S.rf=[today().slice(0,8)+'01',today()]),w=r=>r.gte('date',f[0]).lte('date',f[1]);
  const[rd,pu,le,ps,tx,all,scs,lt]=await Promise.all([q('readings',w),q('purchases',w),q('ledger_entries',w),q('parties'),q('party_txn'),q('ledger_entries'),q('shift_close'),q('lube_txn',w).catch(()=>[])]);
  const ls=sm(lt.filter(x=>x.type=='sale'),'amount'),lp=sm(lt.filter(x=>x.type=='purchase'),'amount'),sale=sm(rd,'amount')+ls,pur=sm(pu,'amount')+lp,ex=sm(le.filter(x=>x.type=='out'&&EXP.includes(x.category)),'amount'),
- bal=b=>all.filter(x=>x.book==b).reduce((s,x)=>s+(x.type=='in'?1:-1)*num(x.amount),0),due={};
+ bal=b=>all.filter(x=>x.book==b).reduce((s,x)=>s+(x.type=='in'?1:-1)*num(x.amount),0)+(b=='cash'?shiftCash(scs):0),due={};
  tx.forEach(x=>due[x.party_id]=(due[x.party_id]||0)+(x.type=='credit'?1:-1)*num(x.amount));
  const po=ps.map(p=>[p.name,p.phone||'',due[p.id]||0]);window.RP={rd,pu,le,po};
  M(`<div class=card><div class=row><label>From<input type=date id=rf value=${f[0]}></label><label>To<input type=date id=rt value=${f[1]}></label></div><button class=p onclick="S.rf=[$('#rf').value,$('#rt').value];reports()">Show</button></div>
