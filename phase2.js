@@ -1,7 +1,7 @@
 // Phase 2: Stock, Cash/Bank Books, Reports (CA Pack, Tally), Bank Reconciliation
 const TK0=[['T1','MS'],['T2','HSD'],['T3','MS'],['T4','HSD'],['T5','MS'],['T6','HSD']],LOW=2000,
-EXP=['Salary','Expense','Electricity','Rent','Gift','Staff welfare','Repair','Office/Misc','Other'],
-CAT=['Opening balance','Sales deposit','Party receipt','Purchase payment','Transfer','HP card settlement','Salary','Electricity','Rent','Gift','Staff welfare','Repair','Office/Misc','Expense','Other'];
+EXP=['Tiffin','Sweeper','Electric bill','T.A.','Staff salary','Salary','Expense','Electricity','Rent','Gift','Staff welfare','Repair','Office/Misc','Other'],
+CAT=['Opening balance','Sales deposit','Party receipt','Purchase payment','Transfer','HP card settlement','Tiffin','Sweeper','Electric bill','T.A.','Staff salary','Salary','Electricity','Rent','Gift','Staff welfare','Repair','Office/Misc','Expense','Other'];
 Object.assign(L.bn,{stock:'স্টক',books:'ক্যাশ ও ব্যাংক বুক',reports:'রিপোর্ট'});
 const sm=(a,k)=>a.reduce((s,x)=>s+num(x[k]),0),M=h=>$('#main').innerHTML=h;
 const q=async(tb,f)=>{if(f&&/limit\(/.test(f)){return(await f(sb.from(tb).select('*'))).data||[]}const o=[];for(let i=0;;i+=1000){let r=sb.from(tb).select('*');if(f)r=f(r);const{data}=await r.range(i,i+999);if(!data?.length)break;o.push(...data);if(data.length<1000)break}return o};
@@ -15,7 +15,7 @@ async function dRow(tb,id){if(!confirm('Delete this entry? It cannot be undone.'
 async function dShift(id){const{data:x}=await sb.from('shift_close').select('*').eq('id',id).maybeSingle();if(!x)return;
  if(!confirm('Shift '+x.date+' '+x.shift+' will be fully deleted (all nozzle readings + credit entries of that shift). Sure?'))return;
  let e=(await sb.from('readings').delete().eq('date',x.date).eq('shift',x.shift)).error;
- if(!e)e=(await sb.from('party_txn').delete().eq('date',x.date).eq('note','Shift '+x.shift).eq('type','credit')).error;
+ if(!e)e=(await sb.from('party_txn').delete().eq('date',x.date).like('note','Shift '+x.shift+'%').eq('type','credit')).error;
  if(!e)e=(await sb.from('shift_close').delete().eq('id',id)).error;
  e?alert(e.message):go(S.page)}
 const og=go,PG={stock,books,reports,recon};
@@ -87,12 +87,22 @@ async function reports(){
  bal=b=>all.filter(x=>x.book==b).reduce((s,x)=>s+(x.type=='in'?1:-1)*num(x.amount),0)+(b=='cash'?shiftCash(scs):0),due={};
  tx.forEach(x=>due[x.party_id]=(due[x.party_id]||0)+(x.type=='credit'?1:-1)*num(x.amount));
  const po=ps.map(p=>[p.name,p.phone||'',due[p.id]||0]);window.RP={rd,pu,le,po};
+ // v6.5: daily register (like the shop's paper book) + expense by type
+ const inR=x=>x.date>=f[0]&&x.date<=f[1],scR=scs.filter(inR),txR=tx.filter(inR),pn={};ps.forEach(p=>pn[p.id]=p.name);
+ const cP=[...new Set(txR.filter(x=>x.type=='credit').map(x=>x.party_id))].sort((a,b)=>String(pn[a]).localeCompare(String(pn[b]))),exO=le.filter(x=>x.type=='out'&&EXP.includes(x.category)),eC=EXP.filter(c=>exO.some(x=>x.category==c));
+ const ds=[...new Set([...scR,...txR,...exO].map(x=>x.date))].sort(),g=(a,d,k)=>a.filter(x=>x.date==d).reduce((s,x)=>s+num(x[k]),0);
+ const RG=ds.map(d=>[d,g(scR,d,'total_sale'),g(scR,d,'phonepe'),g(scR,d,'upi'),g(scR,d,'hpcard'),...cP.map(p=>g(txR.filter(x=>x.type=='credit'&&x.party_id==p),d,'amount')),...eC.map(c=>g(exO.filter(x=>x.category==c),d,'amount')),g(scR,d,'cash_counted'),g(scR,d,'shortage'),g(txR.filter(x=>x.type=='payment'),d,'amount')]);
+ const RH=['Date','Sale','PhonePe/UPI','Card','HP card',...cP.map(p=>'Credit: '+(pn[p]||p)),...eC,'Cash','Short(+)/Excess(-)','Due paid'],RT2=['TOTAL',...RH.slice(1).map((_,i)=>RG.reduce((s,r)=>s+num(r[i+1]),0))];
+ window.RP.reg=[RH,...RG,RT2];window.RP.exT=[['Expense type','Amount','Entries'],...eC.map(c=>{const a=exO.filter(x=>x.category==c);return[c,sm(a,'amount'),a.length]})];
+ const cell=v=>typeof v=='number'?(v?inr(v):'–'):esc(v),regH=`<div class="card tw"><h3>📒 Daily register (like the book)</h3><button onclick="csv('daily-register',RP.reg)">⬇ Excel (CSV)</button> <button onclick="csv('expense-by-type',RP.exT)">⬇ Expenses by type</button><table><tr>${RH.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>${[...RG,RT2].map((r,i)=>`<tr${i==RG.length?' style="font-weight:700;background:#eef4ff"':''}>${r.map(v=>`<td>${cell(v)}</td>`).join('')}</tr>`).join('')}</table>
+ <h3>Expenses by type</h3><table><tr><th>Type</th><th>Amount</th><th>Entries</th></tr>${window.RP.exT.slice(1).map(r=>`<tr><td>${esc(r[0])}</td><td>${inr(r[1])}</td><td>${r[2]}</td></tr>`).join('')}<tr><td><b>Total</b></td><td><b>${inr(sm(exO,'amount'))}</b></td><td></td></tr></table></div>`;
  M(`<div class=card><div class=row><label>From<input type=date id=rf value=${f[0]}></label><label>To<input type=date id=rt value=${f[1]}></label></div><button class=p onclick="S.rf=[$('#rf').value,$('#rt').value];reports()">Show</button></div>
  <div class="card tw"><h3>Profit & Loss</h3><table><tr><td>Sales (fuel ${inr(sale-ls)} + lube ${inr(ls)})</td><td>${inr(sale)}</td></tr><tr><td>Cost of goods sold (fuel ${inr(fc)} + lube ${inr(lc)})<br><small>litres/kg sold × average purchase rate</small></td><td>${inr(cogs)}</td></tr><tr><td><b>Gross profit</b></td><td><b>${inr(sale-cogs)}</b></td></tr><tr><td>Expenses (salary, rent, etc.)</td><td>${inr(ex)}</td></tr><tr><td><b>Net profit</b></td><td><b class="${sale-cogs-ex<0?'red':'grn'}">${inr(sale-cogs-ex)}</b></td></tr><tr><td><small>Purchases this period (bought, not all sold): fuel ${inr(pur-lp)} + lube ${inr(lp)}</small></td><td><small>${inr(pur)}</small></td></tr></table>
  ${miss.length?`<p class=red>⚠ No purchase rate yet for ${miss.join(', ')}. Enter a tanker/lube purchase so its cost can be counted; until then its cost is taken as ₹0.</p>`:''}
  <h3>Product-wise profit</h3><table><tr><th>Product</th><th>Sold</th><th>Sale</th><th>Avg buy rate</th><th>Cost</th><th>Profit</th><th>Per L/kg</th></tr>${PP.map(x=>`<tr><td>${x.p}</td><td>${x.qn.toFixed(2)} ${U(x.p)}</td><td>${inr(x.sa)}</td><td>${x.av==null?'—':'₹'+x.av.toFixed(2)}</td><td>${x.c==null?'—':inr(x.c)}</td><td class="${(x.pr||0)<0?'red':'grn'}">${x.pr==null?'—':inr(x.pr)}</td><td>${x.pr==null||!x.qn?'—':'₹'+(x.pr/x.qn).toFixed(2)}</td></tr>`).join('')}<tr><td>Lube</td><td></td><td>${inr(ls)}</td><td></td><td>${inr(lc)}</td><td class="${ls-lc<0?'red':'grn'}">${inr(ls-lc)}</td><td></td></tr></table>
  <h3>Stock in hand (not yet sold)</h3><table><tr><th>Product</th><th>Book stock</th><th>Bought value</th><th>Today's rate</th><th>Profit if sold at today's rate</th></tr>${RS.map(x=>`<tr><td>${x.p}</td><td>${x.st==null?'— (enter dip)':x.st.toFixed(0)+' '+U(x.p)}</td><td>${x.val==null?'—':inr(x.val)}</td><td>${x.rt?'₹'+x.rt:'—'}</td><td class="${(x.ep||0)<0?'red':'grn'}">${x.ep==null?'—':inr(x.ep)}</td></tr>`).join('')}</table>
  <h3>Balances (trial summary)</h3><table><tr><td>Cash book</td><td>${inr(bal('cash'))}</td></tr><tr><td>Bank book</td><td>${inr(bal('bank'))}</td></tr><tr><td>HP card (due from company)</td><td>${inr(sm(scs,'hpcard')-all.filter(x=>x.category=='HP card settlement'&&x.type=='in').reduce((a,x)=>a+num(x.amount),0))}</td></tr><tr><td>Debtors (party due)</td><td>${inr(po.reduce((s,x)=>s+x[2],0))}</td></tr></table></div>
+ ${regH}
  <div class=card><h3>CA Pack</h3><button onclick="csv('daybook',dayBook())">Day book (Excel/CSV)</button> <button onclick="csv('party-outstanding',[['Party','Phone','Due'],...RP.po])">Party outstanding</button> <button onclick="tally()">Tally XML</button></div>
  <div class="card tw"><h3>Party outstanding</h3><table>${po.filter(x=>x[2]>0).map(x=>`<tr><td>${esc(x[0])}</td><td>${inr(x[2])}</td><td><a target=_blank href="https://wa.me/91${String(x[1]).replace(/\D/g,'').slice(-10)}?text=${encodeURIComponent('Namaskar '+x[0]+', '+S.cfg.name+' me aapka '+x[2].toFixed(0)+' taka baki hai. Kripya jama kar dein.')}">WhatsApp</a></td></tr>`).join('')}</table></div>`);
 }

@@ -113,7 +113,7 @@ async function dash(){
   <div class=card><span class=ic>📕</span>${t('credit_due')}<div class="big red">${inr(due)}</div></div></div>
   <div class=card><b>Today's report (DSR)</b> &nbsp;<button class=wa onclick="dayDSR()">📲 Send on WhatsApp</button> <small>all shifts total to owner</small></div>
   <div class=card><b>Last 7 days</b>${Object.keys(days).sort().map(k=>`<div>${k} ${inr(days[k])}<div class=bar style="width:${days[k]/mx*100}%"></div></div>`).join('')||'<p>No data yet</p>'}</div>
-  <div class="card tw"><b>Recent shifts</b><table><tr><th>Date</th><th>Shift</th><th>Sale</th><th>Credit</th><th>PhonePe</th><th>UPI</th><th>HP Card</th><th>${t('cash')}</th><th>${t('shortage')}</th><th>By</th></tr>
+  <div class="card tw"><b>Recent shifts</b><table><tr><th>Date</th><th>Shift</th><th>Sale</th><th>Credit</th><th>PhonePe/UPI</th><th>Card</th><th>HP Card</th><th>${t('cash')}</th><th>${t('shortage')}</th><th>By</th></tr>
   ${(sc||[]).map(x=>`<tr><td>${x.date}</td><td>${esc(x.shift)}</td><td>${inr(x.total_sale)}</td><td>${inr(x.credit)}</td><td>${inr(x.phonepe)}</td><td>${inr(x.upi)}</td><td>${inr(x.hpcard)}</td><td>${inr(x.cash_counted)}</td><td class="${x.shortage>0?'red':'grn'}">${inr(x.shortage)}</td><td>${esc(x.closed_by)}</td>${S.me?.role=='owner'?`<td><button title="Delete shift" onclick="dShift(${x.id})">🗑</button></td>`:''}</tr>`).join('')}</table></div>`;
 }
 
@@ -136,12 +136,12 @@ async function shiftPage(){
   <div class=card><b>🧴 Lubricant / mobil oil sale (this shift)</b><div id=lu></div><button onclick=addLu()>+ Lube line</button></div>
   <div class=card><b>Credit sales</b><div id=cr></div><button onclick=addCr()>+ Credit line</button></div>
   <div class=card><b>Expenses (paid from cash: gift, tea, repair etc.)</b><div id=ex></div><button onclick=addEx()>+ Expense line</button></div>
-  <div class=card><div class=row><label>PhonePe<input type=number id=pe oninput=calc()></label><label>UPI / other<input type=number id=upi oninput=calc()></label><label>HP Card<input type=number id=hp oninput=calc()></label><label>${t('cash')} counted<input type=number id=cc oninput=calc()></label></div>
+  <div class=card><div class=row><label>1. PhonePe / UPI<input type=number id=pe oninput=calc()></label><label>2. Debit / Credit card<input type=number id=upi oninput=calc()></label><label>3. HP card<input type=number id=hp oninput=calc()></label><label>4. ${t('cash')} counted<input type=number id=cc oninput=calc()></label></div>
   <div id=sum></div><br><button class=p onclick=saveShift()>${t('save')}</button></div>`;
   calc();
 }
 function addCr(){
-  $('#cr').insertAdjacentHTML('beforeend',`<div class="row crl"><label>Party<select class=cp>${S.parties.map(p=>`<option value=${p.id}>${esc(p.name)}</option>`).join('')}</select></label><label>${t('amount')}<input type=number class=ca oninput=calc()></label></div>`);
+  $('#cr').insertAdjacentHTML('beforeend',`<div class="row crl"><label>Party<select class=cp>${S.parties.map(p=>`<option value=${p.id}>${esc(p.name)}</option>`).join('')}</select></label><label>${t('amount')}<input type=number class=ca oninput=calc()></label><label>What was taken<select class=ci>${[...prods(),'Lube','Other'].map(p=>`<option>${p}</option>`).join('')}</select></label><label>Litre / details<input class=cn placeholder="e.g. 50 L, WB-65 1234"></label></div>`);
 }
 function addEx(){
   $('#ex').insertAdjacentHTML('beforeend',`<div class="row exl"><label>Type<select class=ec>${EXP.map(c=>`<option>${c}</option>`).join('')}</select></label><label>${t('amount')}<input type=number class=ea oninput=calc()></label><label>Paid to / for<input class=en></label></div>`);
@@ -155,7 +155,7 @@ function calc(){
   const lu=[...document.querySelectorAll('.lul')].reduce((a,d)=>{const it=S.lubes.find(x=>x.id==d.querySelector('.lp').value);return a+num(d.querySelector('.lq').value)*num(it?.price)},0);tot+=lu;
   const sx=s=>[...document.querySelectorAll(s)].reduce((a,e)=>a+num(e.value),0),cr=sx('.ca'),ex=sx('.ea'),dg=num($('#pe').value)+num($('#upi').value)+num($('#hp').value),exp=tot-cr-dg-ex,sh=exp-num($('#cc').value);
   window.T={tot,cr,ex,exp,sh,lu,dg};
-  $('#sum').innerHTML=`<div class=sum><div>Total sale<b>${inr(tot)}</b></div><div>Lube<b>${inr(lu)}</b></div><div>Credit<b>${inr(cr)}</b></div><div>PhonePe/UPI/HP card<b>${inr(dg)}</b></div><div>Expenses<b>${inr(ex)}</b></div><div>Expected cash<b>${inr(exp)}</b></div><div>${t('shortage')}<b class="${sh>0?'red':'grn'}">${inr(sh)}</b></div></div>`;
+  $('#sum').innerHTML=`<div class=sum><div>Total sale<b>${inr(tot)}</b></div><div>Lube<b>${inr(lu)}</b></div><div>Credit<b>${inr(cr)}</b></div><div>UPI + card + HP card<b>${inr(dg)}</b></div><div>Expenses<b>${inr(ex)}</b></div><div>Expected cash<b>${inr(exp)}</b></div><div>${t('shortage')}<b class="${sh>0?'red':'grn'}">${inr(sh)}</b></div></div>`;
 }
 async function saveShift(){
   const date=$('#sd').value,shift=$('#ss').value,who=$('#cb').value,rows=[];
@@ -173,7 +173,7 @@ async function saveShift(){
   const {data:dup}=await sb.from('shift_close').select('id').eq('date',date).eq('shift',shift);
   if(dup?.length&&!confirm('This shift is already saved. Save again?'))return;
   calc();let e=(await sb.from('readings').insert(rows)).error;
-  const tx=[...document.querySelectorAll('.crl')].map(d=>({party_id:+d.querySelector('.cp').value,date,type:'credit',amount:num(d.querySelector('.ca').value),note:'Shift '+shift})).filter(x=>x.amount>0&&x.party_id);
+  const tx=[...document.querySelectorAll('.crl')].map(d=>({party_id:+d.querySelector('.cp').value,date,type:'credit',amount:num(d.querySelector('.ca').value),note:'Shift '+shift+' · '+d.querySelector('.ci').value+(d.querySelector('.cn').value.trim()?' · '+d.querySelector('.cn').value.trim():'')})).filter(x=>x.amount>0&&x.party_id);
   if(!e&&tx.length)e=(await sb.from('party_txn').insert(tx)).error;
   const ex=[...document.querySelectorAll('.exl')].map(d=>({date,book:'cash',type:'out',category:d.querySelector('.ec').value,amount:num(d.querySelector('.ea').value),note:'Shift '+shift+(d.querySelector('.en').value?': '+d.querySelector('.en').value:''),by_name:who})).filter(x=>x.amount>0);
   if(!e&&ex.length)e=(await sb.from('ledger_entries').insert(ex)).error;

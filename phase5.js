@@ -16,7 +16,7 @@ function dsrLines(title,scs,rds){
   ...Object.entries(by).map(([p,v])=>`${p}: ${f2(v.l)} ${u(p)} = ₹${r0(v.a)}${v.t?` (test ${f2(v.t)} ${u(p)})`:''}`),
   s('lube')?`Lubricant: ₹${r0(s('lube'))}`:'',
   `*Total sale: ₹${r0(s('total_sale'))}*`,'',
-  `Credit: ₹${r0(s('credit'))}`,`PhonePe: ₹${r0(s('phonepe'))}`,`UPI/other: ₹${r0(s('upi'))}`,`HP Card: ₹${r0(s('hpcard'))}`,`Expenses: ₹${r0(s('expense'))}`,
+  `Credit: ₹${r0(s('credit'))}`,`PhonePe/UPI: ₹${r0(s('phonepe'))}`,`Debit/Credit card: ₹${r0(s('upi'))}`,`HP Card: ₹${r0(s('hpcard'))}`,`Expenses: ₹${r0(s('expense'))}`,
   `Expected cash: ₹${r0(s('expected_cash'))}`,`Cash counted: ₹${r0(s('cash_counted'))}`,
   `${s('shortage')>0?'⚠ Shortage':'Short/excess'}: ₹${r0(s('shortage'))}`].filter(x=>x!=='').join('\n')}
 function showDSR(sc,rows){
